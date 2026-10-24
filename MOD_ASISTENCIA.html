@@ -1,0 +1,1168 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Módulo de Asistencia y Saque</title>
+  <style>
+    :root {
+      --primario: #1f6feb;
+      --primario-suave: #e8f0fe;
+      --fondo: #f4f6f9;
+      --superficie: #ffffff;
+      --borde: #dde2ea;
+      --texto: #1c2430;
+      --texto-suave: #5f6b7a;
+      --ancho-menu: 250px;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: "Segoe UI", system-ui, sans-serif;
+      font-size: 14px;
+      background: var(--fondo);
+      color: var(--texto);
+    }
+
+    /* ---------- Encabezado ---------- */
+    .encabezado {
+      height: 56px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 0 16px;
+      background: var(--superficie);
+      border-bottom: 1px solid var(--borde);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+    /* Pestañas de módulos: cada módulo es su propio archivo HTML */
+    .pestanas { display: flex; gap: 4px; height: 100%; overflow-x: auto; }
+    .pestanas a {
+      display: flex;
+      align-items: center;
+      padding: 0 14px;
+      border-bottom: 3px solid transparent;
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--texto-suave);
+      text-decoration: none;
+      white-space: nowrap;
+    }
+    .pestanas a.activo { color: var(--primario); border-bottom-color: var(--primario); }
+    .btn-menu {
+      display: none;
+      border: 1px solid var(--borde);
+      background: none;
+      border-radius: 6px;
+      padding: 6px 10px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+
+    /* ---------- Estructura ---------- */
+    .contenedor { display: flex; min-height: calc(100vh - 56px); }
+
+    /* ---------- Menú lateral de submódulos ---------- */
+    .menu {
+      width: var(--ancho-menu);
+      flex-shrink: 0;
+      background: var(--superficie);
+      border-right: 1px solid var(--borde);
+      padding: 16px 10px;
+    }
+    .menu-titulo {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      color: var(--texto-suave);
+      margin: 0 8px 8px;
+    }
+    .menu button {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 9px 10px;
+      border: none;
+      background: none;
+      border-radius: 6px;
+      font: inherit;
+      color: var(--texto);
+      text-align: left;
+      cursor: pointer;
+    }
+    .menu button.activo {
+      background: var(--primario-suave);
+      color: var(--primario);
+      font-weight: 600;
+    }
+    .menu .icono { width: 20px; text-align: center; }
+
+    /* ---------- Contenido ---------- */
+    .contenido { flex: 1; padding: 24px; min-width: 0; }
+    .contenido h2 { margin: 0 0 4px; font-size: 20px; }
+    .contenido .descripcion { margin: 0 0 20px; color: var(--texto-suave); }
+
+    .panel {
+      background: var(--superficie);
+      border: 1px solid var(--borde);
+      border-radius: 10px;
+      padding: 24px;
+    }
+    .marcador {
+      border: 2px dashed var(--borde);
+      border-radius: 8px;
+      padding: 40px 16px;
+      text-align: center;
+      color: var(--texto-suave);
+    }
+    .panel + .panel { margin-top: 16px; }
+    .panel h3 { margin: 0 0 4px; font-size: 16px; }
+
+    /* ---------- Formularios y botones ---------- */
+    .campo label { display: block; font-weight: 600; margin-bottom: 4px; }
+    .ayuda { color: var(--texto-suave); }
+    .acciones { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; flex-wrap: wrap; }
+    .centrado { justify-content: center; }
+    .btn {
+      padding: 9px 18px;
+      border-radius: 6px;
+      border: 1px solid var(--borde);
+      background: var(--superficie);
+      font: inherit;
+      cursor: pointer;
+    }
+    .btn-primario { background: var(--primario); border-color: var(--primario); color: #fff; font-weight: 600; }
+    .btn:disabled { opacity: .5; cursor: not-allowed; }
+    .btn-ok { background: #1a7f37; border-color: #1a7f37; color: #fff; font-weight: 600; }
+    .btn-no { background: #d1242f; border-color: #d1242f; color: #fff; font-weight: 600; }
+    .btn-eliminar { padding: 6px 12px; color: #d1242f; font-weight: 700; }
+    .btn-conmutar { width: 100%; margin-top: 14px; border-style: dashed; color: var(--primario); font-weight: 600; }
+    .texto-error { color: #d1242f; }
+    .aviso {
+      margin-top: 14px;
+      padding: 10px 12px;
+      border-radius: 6px;
+      background: #e6f4ea;
+      color: #1a7f37;
+    }
+    .barra-ruta {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 12px;
+    }
+    .barra-ruta .instruccion { margin: 0; flex: 1 1 280px; }
+    .barra-ruta .acciones { margin: 0; }
+    .campos-ventanilla { display: grid; gap: 12px; margin-top: 14px; }
+    .selector-numero { display: flex; align-items: center; gap: 8px; }
+    .selector-numero .btn { width: 44px; height: 44px; padding: 0; font-size: 20px; font-weight: 700; }
+    .selector-numero strong { min-width: 80px; text-align: center; font-size: 15px; }
+    .selector-hora { display: flex; align-items: center; gap: 4px; }
+    .selector-hora select {
+      flex: 1;
+      min-width: 0;
+      padding: 9px 6px;
+      border: 1px solid var(--borde);
+      border-radius: 6px;
+      background: var(--superficie);
+      font: inherit;
+      color: var(--texto);
+    }
+    .switch { display: flex; align-items: center; gap: 6px; font-size: 13px; cursor: pointer; }
+    .switch input { width: 18px; height: 18px; accent-color: #1a7f37; }
+
+    /* ---------- Listas de unidades ---------- */
+    .lista-flota { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; }
+    .fila-flota {
+      display: flex;
+      align-items: center;
+      gap: 8px 10px;
+      flex-wrap: wrap;
+      padding: 10px 12px;
+      border: 1px solid var(--borde);
+      border-radius: 8px;
+    }
+    button.fila-flota { width: 100%; background: var(--superficie); font: inherit; color: inherit; text-align: left; cursor: pointer; }
+    button.fila-flota:hover { border-color: var(--primario); }
+    .flota-info { flex: 1 1 220px; display: flex; flex-direction: column; gap: 2px; }
+    .flota-info span { font-size: 12px; color: var(--texto-suave); }
+    .simulador summary { cursor: pointer; font-size: 13px; color: var(--texto-suave); }
+
+    /* ---------- Asistencia y saque diario ---------- */
+    .puesto { min-width: 34px; font-size: 16px; font-weight: 700; color: var(--primario); }
+    .asa {
+      padding: 6px 10px;
+      font-size: 22px;
+      line-height: 1;
+      color: var(--texto-suave);
+      cursor: grab;
+      touch-action: none;
+      user-select: none;
+    }
+    .fila-cola.arrastrando { background: var(--primario-suave); box-shadow: 0 4px 12px rgba(0,0,0,.15); }
+    .fila-cola.fija { background: var(--fondo); }
+    .barra-vueltas { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
+    .barra-vueltas .btn { font-weight: 600; }
+    .btn.vuelta-bloqueada { background: #e9ecef; border-color: #ced4da; color: var(--texto-suave); }
+    .btn-nueva-vuelta { border-style: dashed; color: var(--primario); }
+    .metas { margin-top: 4px; font-size: 12px; color: var(--texto-suave); }
+    .metas summary { cursor: pointer; }
+    .metas ul { margin: 4px 0 0; padding-left: 18px; }
+    .opciones-hora { display: flex; gap: 8px; flex-wrap: wrap; }
+    .opciones-hora .btn { flex: 1 1 160px; }
+
+    /* ---------- Barra de licencia ---------- */
+    .barra-licencia {
+      display: flex;
+      align-items: center;
+      gap: 8px 16px;
+      flex-wrap: wrap;
+      padding: 8px 16px;
+      background: var(--superficie);
+      border-bottom: 1px solid var(--borde);
+      font-size: 13px;
+    }
+    .insignia { padding: 3px 10px; border-radius: 999px; font-size: 12px; font-weight: 600; }
+    .insignia.al-dia { background: #e6f4ea; color: #1a7f37; }
+    .insignia.gracia { background: #fff4d6; color: #8a5a00; }
+    .insignia.vencida { background: #fde7e9; color: #b4232c; }
+    .alerta-licencia { flex-basis: 100%; padding: 8px 10px; border-radius: 6px; background: #fff4d6; color: #5c4400; }
+    .alerta-licencia.vencida { background: #fde7e9; color: #7a1a20; }
+
+    /* ---------- Ventanillas ---------- */
+    .modal-fondo {
+      position: fixed;
+      inset: 0;
+      z-index: 2000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      background: rgba(0,0,0,.4);
+    }
+    .modal {
+      position: relative;
+      width: 100%;
+      max-width: 460px;
+      max-height: calc(100vh - 32px);
+      overflow-y: auto;
+      padding: 20px;
+      border-radius: 10px;
+      background: var(--superficie);
+      box-shadow: 0 10px 30px rgba(0,0,0,.2);
+    }
+    .modal.ancha { max-width: 640px; }
+    .modal h3 { margin: 0 0 8px; font-size: 16px; }
+    .modal p { margin: 0; color: var(--texto-suave); }
+    .modal .con-cerrar { padding-right: 40px; }
+    .cerrar-x {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      width: 32px;
+      height: 32px;
+      border: 1px solid var(--borde);
+      border-radius: 6px;
+      background: var(--superficie);
+      font-size: 16px;
+      cursor: pointer;
+    }
+
+    /* ---------- Celular ---------- */
+    @media (max-width: 768px) {
+      .btn-menu { display: inline-block; }
+      .menu {
+        position: fixed;
+        top: 56px;
+        bottom: 0;
+        left: 0;
+        z-index: 9;
+        transform: translateX(-100%);
+        transition: transform .2s;
+      }
+      .menu.abierto { transform: translateX(0); box-shadow: 4px 0 16px rgba(0,0,0,.1); }
+      .contenido { padding: 16px; }
+    }
+  </style>
+</head>
+<body>
+
+  <header class="encabezado">
+    <button class="btn-menu" id="btnMenu" aria-label="Abrir menú">☰</button>
+    <nav class="pestanas">
+      <a href="MOD_CONFIGURACION.html">⚙️ Configuración</a>
+      <a class="activo" href="MOD_ASISTENCIA.html">📋 Asistencia y Saque</a>
+      <a href="MOD_MONITOREO.html">📡 Ruta y Monitoreo</a>
+    </nav>
+  </header>
+
+  <div class="barra-licencia" id="barraLicencia"></div>
+
+  <div class="contenedor">
+    <nav class="menu" id="menu">
+      <p class="menu-titulo">Submódulos</p>
+      <button class="activo"><span class="icono">📋</span>Asistencia y Saque Diario</button>
+    </nav>
+
+    <main class="contenido" id="contenido"></main>
+  </div>
+
+  <div id="modal"></div>
+
+  <script>
+    // ============================================================
+    // CONEXIÓN CON EL MÓDULO DE CONFIGURACIÓN (MOD_CONFIGURACION.html)
+    // Este módulo solo lee lo que la Configuración guarda en el navegador. Si se cambia algo allá
+    // (aunque esté abierta en otra pestaña), esta pantalla se actualiza sola.
+    // ============================================================
+    const CONFIGURACION = "MOD_CONFIGURACION.html";
+    const CLAVES = {
+      licencia: "config_licencia",
+      personal: "config_personal",
+      ruta: "config_ruta_oficial",
+      desvios: "config_desvios",
+      controles: "config_controles",
+      horarios: "config_horarios",
+      flota: "config_flota"
+    };
+    const DIAS_GRACIA = 3;
+    const RADIO_CONTROL = 25; // metros: un control queda omitido si el desvío esquiva su radio
+    const MESES = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+    const SENTIDOS = { ida: "Ida (A → B)", regreso: "Regreso (B → A)" };
+    const NOMBRE_SENTIDO = { ida: "Ida", regreso: "Regreso" };
+
+    function leer(clave, defecto) {
+      try { return JSON.parse(localStorage.getItem(clave)) ?? defecto; } catch (e) { return defecto; }
+    }
+
+    let cfg = {}; // copia de la configuración vigente
+    function cargarConfiguracion() {
+      const sentidoVacio = () => ({ puntos: [], fin: { valle: null, punta: null } });
+      const ruta = leer(CLAVES.ruta, null);
+      cfg = {
+        personal: leer(CLAVES.personal, null),
+        ruta: ruta && ruta.caminoIda && ruta.caminoRegreso ? ruta : null,
+        desvios: leer(CLAVES.desvios, []),
+        controles: leer(CLAVES.controles, { ida: sentidoVacio(), regreso: sentidoVacio() }),
+        horarios: leer(CLAVES.horarios, { tolerancia: 2, franjas: [] }),
+        flota: leer(CLAVES.flota, { solicitudes: [], padron: [] })
+      };
+    }
+
+    // ---------- Utilidades ----------
+    function esc(texto) {
+      return String(texto).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+    }
+
+    const dosCifras = x => String(x).padStart(2, "0");
+    const fechaISO = fecha => `${fecha.getFullYear()}-${dosCifras(fecha.getMonth() + 1)}-${dosCifras(fecha.getDate())}`;
+    const hoyISO = () => fechaISO(new Date());
+    const fechaLarga = fecha => `${fecha.getDate()} de ${MESES[fecha.getMonth()]} de ${fecha.getFullYear()}`;
+
+    // Las horas se muestran en 12 h: "06:30 PM"
+    function hora12(hhmm) {
+      const [h, m] = hhmm.split(":").map(Number);
+      return `${dosCifras(h % 12 || 12)}:${dosCifras(m)} ${h < 12 ? "AM" : "PM"}`;
+    }
+
+    function mostrarModal(html, alElegir) {
+      const caja = document.getElementById("modal");
+      caja.innerHTML = `<div class="modal-fondo"><div class="modal" role="dialog" aria-modal="true">${html}</div></div>`;
+      caja.querySelectorAll("[data-accion]").forEach(b => b.onclick = () => {
+        caja.innerHTML = "";
+        alElegir(b.dataset.accion);
+      });
+    }
+
+    // ---------- Licencia (se administra en la Configuración) ----------
+    function estadoLicencia() {
+      const l = { activacion: hoyISO(), mesesPagados: 1, ...leer(CLAVES.licencia, {}) };
+      // Ciclo de fecha fija; si el mes no tiene ese día, vence el último día del mes
+      const [a, m, d] = l.activacion.split("-").map(Number);
+      const vence = new Date(a, m - 1 + l.mesesPagados, Math.min(d, new Date(a, m + l.mesesPagados, 0).getDate()));
+      const hoy = new Date();
+      hoy.setHours(0, 0, 0, 0);
+      const diasVencido = Math.round((hoy - vence) / 86400000);
+      const finGracia = new Date(vence);
+      finGracia.setDate(finGracia.getDate() + DIAS_GRACIA);
+      const estado = diasVencido <= 0 ? "al-dia" : diasVencido <= DIAS_GRACIA ? "gracia" : "vencida";
+      return { vence, finGracia, estado, diasRestantes: DIAS_GRACIA - diasVencido };
+    }
+
+    function pintarLicencia() {
+      const e = estadoLicencia();
+      const insignias = {
+        "al-dia": "Licencia Activa / Al Día",
+        gracia: "Pago Pendiente - Período de Gracia",
+        vencida: "Licencia Vencida"
+      };
+      const alertas = {
+        gracia: `⚠ El plazo venció y el pago aún no se registra. La salida de los carros <strong>no se bloquea</strong>: quedan ${e.diasRestantes} día(s) de tolerancia (hasta el ${fechaLarga(e.finGracia)}) para regularizar el abono.`,
+        vencida: `⛔ El período de gracia terminó el ${fechaLarga(e.finGracia)}. Regulariza el pago para reactivar el servicio.`
+      };
+      document.getElementById("barraLicencia").innerHTML = `
+        <span class="insignia ${e.estado}">${insignias[e.estado]}</span>
+        <span>Vence: <strong>${fechaLarga(e.vence)}</strong></span>
+        ${alertas[e.estado] ? `<div class="alerta-licencia ${e.estado}">${alertas[e.estado]}</div>` : ""}
+      `;
+    }
+
+    // ---------- Ruta, desvíos y tiempos de tramo ----------
+    function distanciaMetros(a, b) {
+      const rad = x => x * Math.PI / 180;
+      const dLat = rad(b.lat - a.lat), dLng = rad(b.lng - a.lng);
+      const h = Math.sin(dLat / 2) ** 2 + Math.cos(rad(a.lat)) * Math.cos(rad(b.lat)) * Math.sin(dLng / 2) ** 2;
+      return 2 * 6371000 * Math.asin(Math.sqrt(h));
+    }
+
+    // Punto más cercano sobre el camino; "posicion" = tramo + fracción, para saber qué tan adelante está
+    function imantar(p, camino) {
+      let mejor = null;
+      const k = Math.cos(p.lat * Math.PI / 180);
+      for (let i = 0; i < camino.length - 1; i++) {
+        const a = camino[i], b = camino[i + 1];
+        const ax = (a.lng - p.lng) * k, ay = a.lat - p.lat;
+        const dx = (b.lng - a.lng) * k, dy = b.lat - a.lat;
+        const largo = dx * dx + dy * dy;
+        const t = largo ? Math.max(0, Math.min(1, -(ax * dx + ay * dy) / largo)) : 0;
+        const x = ax + t * dx, y = ay + t * dy, d = x * x + y * y;
+        if (!mejor || d < mejor.d) {
+          mejor = { d, posicion: i + t, punto: { lat: a.lat + t * (b.lat - a.lat), lng: a.lng + t * (b.lng - a.lng) } };
+        }
+      }
+      return { posicion: mejor.posicion, punto: mejor.punto };
+    }
+
+    const caminoOficial = s => s === "ida" ? cfg.ruta.caminoIda : cfg.ruta.caminoRegreso;
+
+    // Un desvío está activo solo en las fechas de su calendario
+    const estaActivo = d => d.fechas.includes(hoyISO());
+
+    // Controles [ Omitido por Desvío ]: sobre la ruta oficial, entre la Salida y la Entrada del desvío
+    function puntosOmitidos(d) {
+      if (!d.inicio || !d.fin) return [];
+      const camino = caminoOficial(d.sentido);
+      return cfg.controles[d.sentido].puntos.filter(c => {
+        const s = imantar(c.punto, camino);
+        return distanciaMetros(c.punto, s.punto) <= RADIO_CONTROL && s.posicion >= d.inicio.posicion && s.posicion <= d.fin.posicion;
+      });
+    }
+
+    // Tramos de un sentido: cada uno termina en un control o en la base final, que guarda sus minutos
+    function tramos(s) {
+      const fin = s === "ida" ? "Base B" : "Base A";
+      return [
+        ...cfg.controles[s].puntos.map(p => ({ nombre: p.nombre, t: p, control: p })),
+        { nombre: fin, t: cfg.controles[s].fin }
+      ];
+    }
+
+    // Franja de hora punta que rige en ese momento (o null = Hora Normal)
+    function franjaVigente(ahora) {
+      const hoy = fechaISO(ahora), dia = (ahora.getDay() + 6) % 7;
+      const hora = `${dosCifras(ahora.getHours())}:${dosCifras(ahora.getMinutes())}`;
+      return cfg.horarios.franjas.find(f => f.activo && f.dias[dia] && f.vigenciaDesde <= hoy && hoy <= f.vigenciaHasta && f.desde <= hora && hora < f.hasta) || null;
+    }
+
+    // ============================================================
+    // MÓDULO DE ASISTENCIA Y SAQUE DIARIO
+    // Usa la configuración: padrón habilitado (Sub 6), Controlador Único (Sub 1) y licencia,
+    // ruta y desvíos del día (Sub 2 y 3), minutos de tramo (Sub 4) y horas punta (Sub 5).
+    // En el APK el GPS detecta cada salida y regreso, y los cambios llegan por push al celular
+    // de los choferes; aquí se simulan ("Modo prueba").
+    // ============================================================
+    const CLAVE_JORNADA = "asistencia_jornada";
+    const CLAVE_PARAMETROS = "asistencia_parametros";
+    const LIMITES = { vueltas: [1, 12], valle: [1, 30], punta: [1, 30], vueltasExtra: [1, 6], nocturno: [1, 60] };
+    const AVISO_CHOFERES = "📲 Se actualizó al instante el celular de los choferes con su nuevo puesto y hora de salida.";
+
+    // Cada día empieza con una asistencia nueva. Las horas se guardan en minutos desde la medianoche.
+    // Vuelta: { numero, filas, intervalo } — "intervalo" solo existe en las vueltas adicionales (turno nocturno).
+    // Fila de una vuelta: { id del conductor, estado: espera | pista | regreso | averia, salida, salioReal, regresoReal,
+    //   cruces (horas reales en cada control y en Base B, las registra el Módulo de Monitoreo), proyeccion }
+    // llegadas: hora en que cada unidad se presentó en Base A; averiados: unidades fuera de servicio hoy;
+    // desvios: autocalibración de cada desvío del día (la lleva el Módulo de Monitoreo).
+    const jornadaVacia = () => ({ fecha: hoyISO(), cola: [], parametros: null, vueltas: [], llegadas: {}, averiados: [], desvios: {} });
+    let jornada;
+    function cargarJornada() {
+      const guardada = leer(CLAVE_JORNADA, null);
+      jornada = guardada && guardada.fecha === hoyISO() ? { ...jornadaVacia(), ...guardada } : jornadaVacia();
+    }
+
+    let saque = null;         // parámetros que se fijan en la ventanilla [ Despachar ]
+    let extra = null;         // ventanilla [ + Nueva Vuelta ]: { vueltasExtra, nocturno, cola }
+    let vueltaAbierta = null; // número de la vuelta cuya ventanilla flotante está abierta
+    let agregando = false;    // lista de disponibles visible en esa ventanilla
+    let avisoVuelta = "";
+    let simularGPS = false;   // Modo prueba: botones para marcar salidas y regresos
+
+    function guardarJornada() {
+      try { localStorage.setItem(CLAVE_JORNADA, JSON.stringify(jornada)); } catch (e) {}
+    }
+
+    const conductor = id => cfg.flota.padron.find(c => c.id === id);
+    const datosConductor = id => conductor(id) || { padron: "?", nombreCompleto: "(ya no figura en el padrón)", placa: "—" };
+    const etiquetaPadron = c => `Padrón ${dosCifras(c.padron)}`;
+    const vueltaPorNumero = n => jornada.vueltas.find(v => v.numero === n);
+    const mover = (lista, desde, hasta) => lista.splice(hasta, 0, lista.splice(desde, 1)[0]);
+
+    // ---------- Horas ----------
+    const aMinutos = hhmm => { const [h, m] = hhmm.split(":").map(Number); return h * 60 + m; };
+    const horaDe = min => hora12(`${dosCifras(Math.floor(min / 60) % 24)}:${dosCifras(min % 60)}`);
+    const ahoraMinutos = () => { const d = new Date(); return d.getHours() * 60 + d.getMinutes(); };
+
+    // Conexión con el Submódulo 5: ¿a esa hora de hoy rige una franja de Hora Punta activa?
+    function enHoraPunta(min) {
+      const d = new Date();
+      d.setHours(0, min, 0, 0);
+      return !!franjaVigente(d);
+    }
+
+    // Hora del siguiente carro: el intervalo vigente (valle o punta). Si a mitad del intervalo empieza
+    // o termina una hora punta, desde ese momento rige el intervalo nuevo (06:25 → 06:30 → 06:34…).
+    // Las vueltas adicionales usan siempre su propio intervalo nocturno.
+    function siguienteSalida(anterior, vuelta) {
+      if (vuelta.intervalo) return anterior + vuelta.intervalo;
+      const p = jornada.parametros, intervalo = min => enHoraPunta(min) ? p.punta : p.valle;
+      const candidata = anterior + intervalo(anterior), punta = enHoraPunta(anterior);
+      for (let m = anterior + 1; m < candidata; m++) {
+        if (enHoraPunta(m) !== punta) return Math.max(m, anterior + intervalo(m));
+      }
+      return candidata;
+    }
+
+    // ---------- Conexión con los Submódulos 2, 3 y 4 ----------
+    // Tramos de ida y regreso del día, marcando los controles que el desvío activo esquiva
+    function planDelDia() {
+      if (!cfg.ruta) return null;
+      const omitidos = cfg.desvios.filter(estaActivo).flatMap(puntosOmitidos);
+      const plan = {};
+      ["ida", "regreso"].forEach(s => {
+        // "clave" identifica cada punto para el Módulo de Monitoreo: "ida:<id del control>", "baseB", "regreso:<id>", "baseA"
+        plan[s] = tramos(s).map(n => ({
+          clave: n.control ? `${s}:${n.control.id}` : s === "ida" ? "baseB" : "baseA",
+          nombre: n.nombre,
+          t: n.t,
+          omitido: omitidos.includes(n.control)
+        }));
+      });
+      // Desvío autocalibrado con [ ✓ Agregar ]: su tramo toma el promedio real medido con 3 unidades
+      Object.values(jornada.desvios).filter(r => r.activo && r.modo === "agregado").forEach(r => {
+        plan[r.sentido].forEach(tramo => {
+          if (tramo.clave === r.reconexion) tramo.t = { valle: r.minutos, punta: r.minutos };
+          else if (r.omitidos.includes(tramo.clave)) tramo.t = { valle: 0, punta: 0 };
+        });
+      });
+      return plan;
+    }
+
+    // Horas meta en cada control, llegada a Base B y regreso a Base A. Cada tramo toma los minutos
+    // de valle o de punta según la hora en que empieza. null si falta la ruta o algún minuto de tramo.
+    function proyectar(salida, plan) {
+      if (!plan) return null;
+      let hora = salida, llegadaB = null;
+      const metas = [];
+      for (const s of ["ida", "regreso"]) {
+        for (const tramo of plan[s]) {
+          const minutos = tramo.t[enHoraPunta(hora) ? "punta" : "valle"];
+          if (minutos == null) return null;
+          hora += minutos;
+          metas.push({ clave: tramo.clave, sentido: s, nombre: tramo.nombre, hora, omitido: tramo.omitido });
+        }
+        if (s === "ida") llegadaB = hora;
+      }
+      return { metas, llegadaB, regreso: hora };
+    }
+
+    // Encadena las salidas de todas las vueltas: cada carro sale un intervalo después del anterior y
+    // nunca antes de haber vuelto de su vuelta previa. Las filas que ya salieron a pista quedan fijas.
+    function recalcularHoras() {
+      if (!jornada.parametros) return;
+      const plan = planDelDia(), regreso = {};
+      let anterior = null;
+      jornada.vueltas.forEach(v => v.filas.forEach(f => {
+        if (f.estado === "espera") {
+          f.salida = anterior == null ? jornada.parametros.primera : siguienteSalida(anterior, v);
+          if (regreso[f.id] != null) f.salida = Math.max(f.salida, regreso[f.id]);
+        }
+        anterior = f.salida;
+        f.proyeccion = proyectar(f.salida, plan);
+        if (f.proyeccion) regreso[f.id] = f.proyeccion.regreso;
+      }));
+    }
+
+    // ---------- Conexión con el Submódulo 6 y con el Módulo de Monitoreo ----------
+    // Puede trabajar hoy quien está [ Habilitado ] y no fue marcado con avería en el Monitoreo
+    const operativo = c => c.habilitado && !jornada.averiados.includes(c.id);
+
+    // Quien pasa a [ Deshabilitado ] o sufre una avería sale de la cola y de las vueltas donde aún
+    // no salió; lo que ya hizo en pista se conserva intacto como historial.
+    function sincronizarPadron() {
+      const puede = id => { const c = conductor(id); return !!c && operativo(c); };
+      jornada.cola = jornada.cola.filter(puede);
+      jornada.vueltas.forEach(v => { v.filas = v.filas.filter(f => f.estado !== "espera" || puede(f.id)); });
+      recalcularHoras();
+      guardarJornada();
+    }
+
+    // Una vuelta se bloquea cuando toda su cola ya fue a Base B y ya regresó a Base A
+    // (una unidad con avería cuenta como terminada: su recorrido quedó truncado)
+    const vueltaCompleta = v => v.filas.length > 0 && v.filas.every(f => f.estado === "regreso" || f.estado === "averia");
+
+    // Siguiente carro que debe salir de Base A (las salidas van en el orden de la cola)
+    function proximaFila() {
+      for (const v of jornada.vueltas) for (const f of v.filas) if (f.estado === "espera") return f;
+      return null;
+    }
+
+    // ---------- Conexión con la Cabecera y el Submódulo 1 ----------
+    // Solo el Controlador Único registrado opera, y solo con la licencia activa o en sus días de gracia
+    function bloqueoAsistencia() {
+      if (estadoLicencia().estado === "vencida") {
+        return { texto: "La licencia está vencida y ya pasaron sus 3 días de gracia: no se puede abrir la asistencia ni disparar el saque." };
+      }
+      if (!cfg.personal) {
+        return { texto: "Registra primero al Controlador Único (Personal a Cargo): solo él puede abrir la asistencia y disparar el saque.", ir: "empresa", boton: "Ir a Empresa y Personal" };
+      }
+      return null;
+    }
+
+    // ---------- Pantalla ----------
+    // Se vuelve a dibujar al abrir y cada vez que cambia la configuración o la jornada en otra pestaña
+    function pintarPantalla() {
+      pintarLicencia();
+      const b = bloqueoAsistencia();
+      document.getElementById("contenido").innerHTML = `
+        <h2>📋 Asistencia y Saque Diario</h2>
+        <p class="descripcion">Cola de salida del día con el padrón habilitado, parámetros del saque y vueltas programadas.</p>
+        ${b ? `
+          <section class="panel">
+            <div class="marcador">
+              ⛔ ${b.texto}
+              ${b.ir ? `<div class="acciones centrado"><a class="btn btn-primario" href="${CONFIGURACION}#${b.ir}">${b.boton}</a></div>` : ""}
+            </div>
+          </section>` : `<div id="zonaAsistencia"></div>`}
+      `;
+      if (b) {
+        document.getElementById("modal").innerHTML = "";
+        saque = extra = vueltaAbierta = null;
+        return;
+      }
+      sincronizarPadron();
+      pintarAsistencia();
+      if (saque && jornada.parametros) cerrarSaque();
+      if (extra && !jornada.parametros) cerrarExtra();
+      if (saque) pintarSaque();
+      else if (extra) pintarExtra();
+      else if (vueltaAbierta && vueltaPorNumero(vueltaAbierta)) pintarVuelta();
+    }
+
+    function rutaDelDiaHTML() {
+      if (!cfg.ruta) return `<p class="texto-error">⚠ Aún no hay Ruta Oficial (Trazado de Ruta): no se pueden calcular horas meta ni regresos.</p>`;
+      const hoy = cfg.desvios.filter(estaActivo).map(d => {
+        const omitidos = puntosOmitidos(d).map(p => esc(p.nombre));
+        return `desvío «${esc(d.nombre)}» en ${SENTIDOS[d.sentido]}${omitidos.length ? ` · [ Omitido por Desvío ]: ${omitidos.join(", ")}` : ""}`;
+      });
+      const faltan = ["ida", "regreso"].some(s => tramos(s).some(n => n.t.valle == null));
+      return `
+        <p class="ayuda">Ruta del día: <strong>${hoy.length ? hoy.join("; ") : "Ruta Oficial"}</strong></p>
+        ${faltan ? `<p class="texto-error">⚠ Faltan minutos de tramo en Puntos de Control y Tiempos: no se pueden proyectar las horas meta ni los regresos.</p>` : ""}
+      `;
+    }
+
+    function vueltasHTML() {
+      const p = jornada.parametros, adicionales = jornada.vueltas.filter(v => v.intervalo);
+      return `
+        <section class="panel">
+          <h3>Vueltas del día</h3>
+          <p class="ayuda">
+            Valle cada ${p.valle} min · Punta cada ${p.punta} min · Primer carro ${horaDe(p.primera)} · Tolerancia ±${cfg.horarios.tolerancia} min
+            ${adicionales.length ? `<br>🌙 Vueltas adicionales: ${adicionales.map(v => `Vuelta ${v.numero} cada ${v.intervalo} min`).join(" · ")}` : ""}
+          </p>
+          <div class="barra-vueltas">
+            ${jornada.vueltas.map(v => vueltaCompleta(v)
+              ? `<button class="btn vuelta-bloqueada" onclick="abrirVuelta(${v.numero})">🔒 Vuelta ${v.numero}</button>`
+              : `<button class="btn btn-primario" onclick="abrirVuelta(${v.numero})">${v.intervalo ? "🌙 " : ""}Vuelta ${v.numero}</button>`).join("")}
+            <button class="btn btn-nueva-vuelta" onclick="abrirExtra()">+ Nueva Vuelta</button>
+          </div>
+        </section>
+      `;
+    }
+
+    // "quitar" = función que devuelve la unidad a la lista de abajo (null = fila sin edición)
+    function filaColaHTML(id, i, quitar) {
+      const c = datosConductor(id);
+      return `
+        <div class="fila-flota fila-cola ${quitar ? "movible" : "fija"}">
+          <span class="puesto">${i + 1}°</span>
+          <div class="flota-info">
+            <strong>${etiquetaPadron(c)} · ${esc(c.nombreCompleto)}</strong>
+            <span>Placa ${esc(c.placa)}</span>
+          </div>
+          ${quitar ? `
+            <button class="btn btn-eliminar" title="Quitar de la cola" onclick="${quitar}('${id}')">✗</button>
+            <span class="asa" title="Mantén presionado y arrastra para cambiar de puesto">≡</span>` : ""}
+        </div>
+      `;
+    }
+
+    function pintarAsistencia(aviso) {
+      const caja = document.getElementById("zonaAsistencia");
+      if (!caja) return;
+      const despachado = !!jornada.parametros;
+      const conTurno = new Set(despachado ? jornada.vueltas.flatMap(v => v.filas.map(f => f.id)) : jornada.cola);
+      const enEspera = cfg.flota.padron.filter(c => operativo(c) && !conTurno.has(c.id));
+
+      const espera = enEspera.map(c => despachado
+        ? `<div class="fila-flota"><div class="flota-info"><strong>${etiquetaPadron(c)} · ${esc(c.nombreCompleto)}</strong><span>Placa ${esc(c.placa)}</span></div></div>`
+        : `<button class="fila-flota" onclick="tomarTurno('${c.id}')">
+             <span class="flota-info"><strong>${etiquetaPadron(c)} · ${esc(c.nombreCompleto)}</strong><span>Placa ${esc(c.placa)} · Toca para darle el puesto ${jornada.cola.length + 1}°</span></span>
+           </button>`).join("");
+      const sinHabilitados = !cfg.flota.padron.some(c => c.habilitado);
+
+      caja.innerHTML = `
+        ${despachado ? vueltasHTML() : ""}
+        <section class="panel">
+          <div class="barra-ruta">
+            <p class="instruccion">Operador autorizado: <strong>${esc(cfg.personal.nombreCompleto)}</strong> (Controlador Único) · ${fechaLarga(new Date())}</p>
+            ${despachado ? "" : `<div class="acciones"><button class="btn btn-primario" onclick="abrirSaque()" ${jornada.cola.length ? "" : "disabled"}>Despachar</button></div>`}
+          </div>
+          ${rutaDelDiaHTML()}
+          ${aviso ? `<div class="aviso">${aviso}</div>` : ""}
+        </section>
+
+        <section class="panel">
+          <h3>${despachado ? "Cola general del día (saque inicial)" : `Cola de salida · ${jornada.cola.length} unidad(es)`}</h3>
+          <p class="ayuda">${despachado
+            ? "El saque ya se lanzó. Para mover un carro o incorporar a quien llegó tarde, abre su vuelta en la barra de arriba."
+            : "Toca las unidades de abajo conforme se reportan en Base A. Para cambiar un puesto, mantén presionadas las tres barritas (≡) y arrastra."}</p>
+          <div class="lista-flota" id="listaCola">
+            ${jornada.cola.map((id, i) => filaColaHTML(id, i, despachado ? null : "quitarDeCola")).join("") || `<p class="ayuda">Aún no hay unidades en la cola.</p>`}
+          </div>
+        </section>
+
+        <section class="panel">
+          <h3>No Asistieron / En Espera</h3>
+          <p class="ayuda">Solo aparecen las unidades <strong>Habilitadas</strong> en Personal de la Empresa; las que están en taller (Deshabilitadas) no se muestran.</p>
+          <div class="lista-flota">
+            ${espera || (sinHabilitados
+              ? `<p class="ayuda">No hay conductores habilitados. <a class="btn" href="${CONFIGURACION}#flota">Ir a Personal de la Empresa</a></p>`
+              : `<p class="ayuda">Todas las unidades habilitadas tienen turno.</p>`)}
+          </div>
+        </section>
+
+        <details class="simulador panel" ${simularGPS ? "open" : ""}>
+          <summary>🔧 Modo prueba (en el APK lo hace el GPS)</summary>
+          <label class="switch" style="margin-top: 12px">
+            <input type="checkbox" ${simularGPS ? "checked" : ""} onchange="simularGPS = this.checked; pintarAsistencia()">
+            Mostrar botones para marcar la salida y el regreso de cada carro dentro de las vueltas
+          </label>
+          <div class="acciones"><button class="btn btn-no" onclick="pedirReinicio()">Reiniciar la jornada de hoy</button></div>
+        </details>
+      `;
+      if (!despachado) activarArrastre(document.getElementById("listaCola"), (desde, hasta) => {
+        mover(jornada.cola, desde, hasta);
+        guardarJornada();
+        pintarAsistencia();
+      });
+    }
+
+    // ---------- Armado inicial de la cola ----------
+    // El toque registra también la hora en que la unidad se presentó en Base A (columna «Base A - Llegada»)
+    function tomarTurno(id) {
+      jornada.cola.push(id);
+      jornada.llegadas[id] = ahoraMinutos();
+      guardarJornada();
+      pintarAsistencia();
+    }
+
+    function quitarDeCola(id) {
+      jornada.cola = jornada.cola.filter(x => x !== id);
+      guardarJornada();
+      pintarAsistencia();
+    }
+
+    // Arrastre con las tres barritas (≡), con el dedo o el mouse: la fila sigue al puntero entre
+    // las filas movibles (las fijas no se tocan) y al soltar avisa de qué puesto a qué puesto pasó.
+    function activarArrastre(lista, alSoltar) {
+      if (!lista) return;
+      const filas = () => [...lista.querySelectorAll(".fila-cola")];
+      lista.querySelectorAll(".asa").forEach(asa => asa.onpointerdown = e => {
+        e.preventDefault();
+        const fila = asa.closest(".fila-cola"), desde = filas().indexOf(fila);
+        fila.classList.add("arrastrando");
+        const mientras = ev => {
+          const otras = [...lista.querySelectorAll(".fila-cola.movible")].filter(f => f !== fila);
+          const antesDe = otras.find(f => { const r = f.getBoundingClientRect(); return ev.clientY < r.top + r.height / 2; });
+          if (antesDe) { if (fila.nextElementSibling !== antesDe) lista.insertBefore(fila, antesDe); }
+          else if (otras.length && otras.at(-1).nextElementSibling !== fila) otras.at(-1).after(fila);
+          filas().forEach((f, i) => { f.querySelector(".puesto").textContent = `${i + 1}°`; });
+        };
+        const alFinal = () => {
+          window.removeEventListener("pointermove", mientras);
+          window.removeEventListener("pointerup", alFinal);
+          window.removeEventListener("pointercancel", alFinal);
+          fila.classList.remove("arrastrando");
+          const hasta = filas().indexOf(fila);
+          if (hasta !== desde) alSoltar(desde, hasta);
+        };
+        window.addEventListener("pointermove", mientras);
+        window.addEventListener("pointerup", alFinal);
+        window.addEventListener("pointercancel", alFinal);
+      });
+    }
+
+    // ---------- Ventanilla de parámetros del día y [ Despachar ] ----------
+    // Se recuerdan los últimos valores usados en el saque y en las vueltas adicionales
+    function abrirSaque() {
+      const p = leer(CLAVE_PARAMETROS, {});
+      saque = { vueltas: p.vueltas ?? 5, valle: p.valle ?? 5, punta: p.punta ?? 4, ahora: true, manual: "05:30" };
+      pintarSaque();
+    }
+
+    // Selector [ − ] valor [ + ] de las ventanillas; "estado" es "saque" o "extra"
+    function selectorNumero(estado, campo, etiqueta, unidad) {
+      const valor = (estado === "saque" ? saque : extra)[campo], [minimo, maximo] = LIMITES[campo];
+      return `
+        <div class="campo">
+          <label>${etiqueta}</label>
+          <div class="selector-numero">
+            <button class="btn" onclick="cambiarNumero('${estado}', '${campo}', -1)" aria-label="Bajar" ${valor <= minimo ? "disabled" : ""}>−</button>
+            <strong>${valor} ${unidad}</strong>
+            <button class="btn" onclick="cambiarNumero('${estado}', '${campo}', 1)" aria-label="Subir" ${valor >= maximo ? "disabled" : ""}>+</button>
+          </div>
+        </div>
+      `;
+    }
+
+    function cambiarNumero(estado, campo, paso) {
+      const objeto = estado === "saque" ? saque : extra, [minimo, maximo] = LIMITES[campo];
+      objeto[campo] = Math.min(maximo, Math.max(minimo, objeto[campo] + paso));
+      estado === "saque" ? pintarSaque() : pintarExtra();
+    }
+
+    // Selector de hora en 12 h (hora 01–12, minutos de 5 en 5, AM/PM)
+    function selectorHora(id, etiqueta, hhmm) {
+      const [h, m] = hhmm.split(":").map(Number);
+      const h12 = h % 12 || 12, pm = h >= 12;
+      const minutos = [...new Set([0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, m])].sort((a, b) => a - b);
+      const opcion = (valor, texto, elegido) => `<option value="${valor}" ${elegido ? "selected" : ""}>${texto}</option>`;
+      const alCambiar = `onchange="cambiarHoraSaque('${id}')"`;
+      return `
+        <div class="campo">
+          <label for="${id}H">${etiqueta}</label>
+          <div class="selector-hora">
+            <select id="${id}H" aria-label="Hora" ${alCambiar}>
+              ${[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map(x => opcion(x, dosCifras(x), x === h12)).join("")}
+            </select>
+            <span>:</span>
+            <select id="${id}M" aria-label="Minutos" ${alCambiar}>
+              ${minutos.map(x => opcion(x, dosCifras(x), x === m)).join("")}
+            </select>
+            <select id="${id}P" aria-label="AM o PM" ${alCambiar}>
+              ${opcion("AM", "AM", !pm)}${opcion("PM", "PM", pm)}
+            </select>
+          </div>
+        </div>
+      `;
+    }
+
+    // Devuelve la hora elegida en formato de 24 h ("18:30")
+    function leerSelectorHora(id) {
+      const valor = sufijo => document.getElementById(id + sufijo).value;
+      const h = Number(valor("H")) % 12 + (valor("P") === "PM" ? 12 : 0);
+      return `${dosCifras(h)}:${dosCifras(valor("M"))}`;
+    }
+
+    function pintarSaque() {
+      const s = saque;
+      document.getElementById("modal").innerHTML = `
+        <div class="modal-fondo"><div class="modal" role="dialog" aria-modal="true">
+          <h3>Parámetros del día</h3>
+          <p>Cola inicial: ${jornada.cola.length} unidad(es). Tolerancia de puntualidad: ±${cfg.horarios.tolerancia} min.</p>
+          <div class="campos-ventanilla">
+            ${selectorNumero("saque", "vueltas", "Cantidad de vueltas del día (Ida + Regreso)", "vueltas")}
+            ${selectorNumero("saque", "valle", "Intervalo de salida en Hora Valle", "min")}
+            ${selectorNumero("saque", "punta", "Intervalo de salida en Hora Punta", "min")}
+            <div class="campo">
+              <label>Hora de salida del primer carro</label>
+              <div class="opciones-hora">
+                <button class="btn ${s.ahora ? "btn-primario" : ""}" onclick="elegirSalida(true)">Salir Ahora (${horaDe(ahoraMinutos())})</button>
+                <button class="btn ${s.ahora ? "" : "btn-primario"}" onclick="elegirSalida(false)">Elegir hora</button>
+              </div>
+            </div>
+            ${s.ahora ? "" : selectorHora("sPrimera", "Hora elegida", s.manual)}
+          </div>
+          <div class="acciones">
+            <button class="btn" onclick="cerrarSaque()">✗ Cancelar</button>
+            <button class="btn btn-ok" onclick="despachar()">Despachar</button>
+          </div>
+        </div></div>
+      `;
+    }
+
+    function elegirSalida(ahora) {
+      saque.ahora = ahora;
+      pintarSaque();
+    }
+
+    function cambiarHoraSaque(id) {
+      saque.manual = leerSelectorHora(id);
+    }
+
+    // ✗ Cancelar: vuelve a la edición de la cola sin lanzar el saque
+    function cerrarSaque() {
+      document.getElementById("modal").innerHTML = "";
+      saque = null;
+    }
+
+    // Lanza oficialmente la jornada: cada vuelta empieza con la cola inicial
+    function despachar() {
+      const { vueltas, valle, punta } = saque;
+      try { localStorage.setItem(CLAVE_PARAMETROS, JSON.stringify({ ...leer(CLAVE_PARAMETROS, {}), vueltas, valle, punta })); } catch (e) {}
+      jornada.parametros = { vueltas, valle, punta, primera: saque.ahora ? ahoraMinutos() : aMinutos(saque.manual) };
+      jornada.vueltas = Array.from({ length: vueltas }, (_, i) => ({
+        numero: i + 1,
+        filas: jornada.cola.map(id => ({ id, estado: "espera" }))
+      }));
+      recalcularHoras();
+      guardarJornada();
+      cerrarSaque();
+      pintarAsistencia("📲 Saque lanzado: cada chofer recibió en su celular su puesto y su hora de salida.");
+    }
+
+    // ---------- Vueltas adicionales / turno nocturno [ + Nueva Vuelta ] ----------
+    // Solo corren los carros que se eligen aquí, con su propio intervalo (de noche es más espaciado)
+    function abrirExtra() {
+      const p = leer(CLAVE_PARAMETROS, {});
+      extra = { vueltasExtra: p.vueltasExtra ?? 1, nocturno: p.nocturno ?? 8, cola: [] };
+      pintarExtra();
+    }
+
+    function pintarExtra() {
+      const e = extra;
+      e.cola = e.cola.filter(id => { const c = conductor(id); return !!c && operativo(c); });
+      const libres = cfg.flota.padron.filter(c => operativo(c) && !e.cola.includes(c.id));
+      const desde = jornada.vueltas.length + 1, hasta = jornada.vueltas.length + e.vueltasExtra;
+      document.getElementById("modal").innerHTML = `
+        <div class="modal-fondo"><div class="modal ancha" role="dialog" aria-modal="true">
+          <h3>🌙 Nueva Vuelta (Turno Nocturno)</h3>
+          <p>Se crea${desde === hasta ? ` la Vuelta ${desde}` : `n las Vueltas ${desde} a ${hasta}`} solo con los carros que elijas, en el orden de salida de la lista.</p>
+          <div class="campos-ventanilla">
+            ${selectorNumero("extra", "vueltasExtra", "Cantidad de vueltas adicionales", "vuelta(s)")}
+            ${selectorNumero("extra", "nocturno", "Intervalo de salida de este bloque", "min")}
+            <div class="campo">
+              <label>Carros participantes · ${e.cola.length} unidad(es)</label>
+              <div class="lista-flota" id="colaExtra">
+                ${e.cola.map((id, i) => filaColaHTML(id, i, "quitarDeExtra")).join("") || `<p class="ayuda">Toca abajo las unidades que correrán estas vueltas, en su orden de salida.</p>`}
+              </div>
+            </div>
+            <div class="campo">
+              <label>Unidades habilitadas</label>
+              <div class="lista-flota">
+                ${libres.map(c => `
+                  <button class="fila-flota" onclick="tomarExtra('${c.id}')">
+                    <span class="flota-info"><strong>${etiquetaPadron(c)} · ${esc(c.nombreCompleto)}</strong><span>Placa ${esc(c.placa)} · Toca para darle el puesto ${e.cola.length + 1}°</span></span>
+                  </button>`).join("") || `<p class="ayuda">Ya elegiste todas las unidades habilitadas.</p>`}
+              </div>
+            </div>
+          </div>
+          <div class="acciones">
+            <button class="btn" onclick="cerrarExtra()">✗ Cancelar</button>
+            <button class="btn btn-ok" onclick="despacharExtra()" ${e.cola.length ? "" : "disabled"}>Despachar</button>
+          </div>
+        </div></div>
+      `;
+      activarArrastre(document.getElementById("colaExtra"), (desdeFila, hastaFila) => {
+        mover(extra.cola, desdeFila, hastaFila);
+        pintarExtra();
+      });
+    }
+
+    function tomarExtra(id) {
+      extra.cola.push(id);
+      pintarExtra();
+    }
+
+    function quitarDeExtra(id) {
+      extra.cola = extra.cola.filter(x => x !== id);
+      pintarExtra();
+    }
+
+    function cerrarExtra() {
+      document.getElementById("modal").innerHTML = "";
+      extra = null;
+    }
+
+    // Agrega las vueltas a la barra; salen a continuación del último carro, cada "nocturno" minutos
+    function despacharExtra() {
+      const { vueltasExtra, nocturno, cola } = extra, base = jornada.vueltas.length;
+      try { localStorage.setItem(CLAVE_PARAMETROS, JSON.stringify({ ...leer(CLAVE_PARAMETROS, {}), vueltasExtra, nocturno })); } catch (e) {}
+      for (let i = 1; i <= vueltasExtra; i++) {
+        jornada.vueltas.push({ numero: base + i, intervalo: nocturno, filas: cola.map(id => ({ id, estado: "espera" })) });
+      }
+      recalcularHoras();
+      guardarJornada();
+      cerrarExtra();
+      pintarAsistencia(`🌙 Vuelta(s) adicional(es) creada(s). 📲 Los ${cola.length} chofer(es) del turno recibieron su puesto y su hora de salida.`);
+    }
+
+    // ---------- Ventanilla flotante de cada vuelta ----------
+    function abrirVuelta(numero) {
+      vueltaAbierta = numero;
+      agregando = false;
+      avisoVuelta = "";
+      pintarVuelta();
+    }
+
+    function metasHTML(f) {
+      const p = f.proyeccion;
+      if (!p) return "";
+      return `
+        <details class="metas">
+          <summary>Meta Base B ${horaDe(p.llegadaB)} · Regreso a Base A ${horaDe(p.regreso)}</summary>
+          <ul>${p.metas.map(m => `<li>${NOMBRE_SENTIDO[m.sentido]} · ${esc(m.nombre)}: ${m.omitido ? "[ Omitido por Desvío ]" : horaDe(m.hora)}</li>`).join("")}</ul>
+        </details>
+      `;
+    }
+
+    function pintarVuelta() {
+      const v = vueltaPorNumero(vueltaAbierta), cerrada = vueltaCompleta(v), siguiente = proximaFila();
+      // Un carro no puede volver a salir mientras siga en pista en una vuelta anterior
+      const sigueEnPista = id => jornada.vueltas.some(o => o.numero < v.numero && o.filas.some(f => f.id === id && f.estado === "pista"));
+
+      const filas = v.filas.map((f, i) => {
+        const c = datosConductor(f.id), movible = !cerrada && f.estado === "espera";
+        const estado = {
+          espera: "En espera en Base A",
+          pista: `🚌 En pista · salió ${horaDe(f.salioReal)}`,
+          regreso: `✔ Salió ${horaDe(f.salioReal)} · regresó a Base A ${horaDe(f.regresoReal)}`,
+          averia: `⛔ Avería / Fuera de Servicio · salió ${horaDe(f.salioReal)}`
+        }[f.estado];
+        let prueba = "";
+        if (simularGPS && !cerrada) {
+          if (f.estado === "pista") prueba = `<button class="btn" onclick="marcarRegreso('${f.id}')">🏁 Regresó</button>`;
+          else if (f === siguiente) prueba = sigueEnPista(f.id)
+            ? `<span class="ayuda">Aún no regresa de la vuelta anterior</span>`
+            : `<button class="btn" onclick="marcarSalida('${f.id}')">🚦 Salió</button>`;
+        }
+        return `
+          <div class="fila-flota fila-cola ${movible ? "movible" : "fija"}">
+            <span class="puesto">${i + 1}°</span>
+            <div class="flota-info">
+              <strong>${etiquetaPadron(c)} — ${horaDe(f.salida)}</strong>
+              <span>${esc(c.nombreCompleto)} · ${estado}</span>
+              ${metasHTML(f)}
+            </div>
+            ${prueba}
+            ${movible ? `<span class="asa" title="Mantén presionado y arrastra para cambiar de puesto">≡</span>` : ""}
+          </div>
+        `;
+      }).join("");
+
+      const enVuelta = new Set(v.filas.map(f => f.id));
+      const disponibles = cfg.flota.padron.filter(c => operativo(c) && !enVuelta.has(c.id));
+      const agregar = cerrada ? "" : agregando
+        ? `<div class="lista-flota">
+             <p class="ayuda">Elige al conductor que se incorpora (solo habilitados que aún no están en esta vuelta):</p>
+             ${disponibles.map(c => `
+               <button class="fila-flota" onclick="agregarAVuelta('${c.id}')">
+                 <span class="flota-info"><strong>${etiquetaPadron(c)} · ${esc(c.nombreCompleto)}</strong><span>Placa ${esc(c.placa)}</span></span>
+               </button>`).join("") || `<p class="ayuda">Todos los conductores habilitados ya están en esta vuelta.</p>`}
+             <button class="btn" onclick="agregando = false; pintarVuelta()">✗ Cancelar</button>
+           </div>`
+        : `<button class="btn btn-conmutar" onclick="agregando = true; pintarVuelta()">+ Agregar Conductor a la Vuelta</button>`;
+
+      document.getElementById("modal").innerHTML = `
+        <div class="modal-fondo"><div class="modal ancha" role="dialog" aria-modal="true">
+          <button class="cerrar-x" onclick="cerrarVuelta()" aria-label="Cerrar" title="Cerrar">✗</button>
+          <h3 class="con-cerrar">${cerrada ? "🔒 " : v.intervalo ? "🌙 " : ""}Vuelta ${v.numero}${v.intervalo ? ` · adicional, cada ${v.intervalo} min` : ""}</h3>
+          <p>${cerrada
+            ? "Vuelta Completada / Bloqueada · solo lectura (historial): orden final en que salieron y regresaron."
+            : `Tolerancia de puntualidad ±${cfg.horarios.tolerancia} min. Mientras un carro no salga de Base A, se puede mover con las tres barritas (≡); al salir, su fila queda fija.`}</p>
+          <div class="lista-flota" id="filasVuelta">${filas || `<p class="ayuda">Esta vuelta no tiene unidades.</p>`}</div>
+          ${agregar}
+          ${avisoVuelta ? `<div class="aviso">${avisoVuelta}</div>` : ""}
+        </div></div>
+      `;
+      if (!cerrada) activarArrastre(document.getElementById("filasVuelta"), (desde, hasta) => {
+        mover(v.filas, desde, hasta);
+        actualizarVuelta(AVISO_CHOFERES);
+      });
+    }
+
+    function actualizarVuelta(aviso) {
+      recalcularHoras();
+      guardarJornada();
+      avisoVuelta = aviso;
+      pintarVuelta();
+      pintarAsistencia();
+    }
+
+    // La [ ✗ ] solo cierra la ventanilla; la vuelta queda tal cual
+    function cerrarVuelta() {
+      document.getElementById("modal").innerHTML = "";
+      vueltaAbierta = null;
+    }
+
+    // Llegada tardía: entra al final de la vuelta (hora del último carro + intervalo vigente)
+    function agregarAVuelta(id) {
+      vueltaPorNumero(vueltaAbierta).filas.push({ id, estado: "espera" });
+      if (jornada.llegadas[id] == null) jornada.llegadas[id] = ahoraMinutos();
+      agregando = false;
+      actualizarVuelta(AVISO_CHOFERES);
+    }
+
+    // Modo prueba: en el APK lo detecta el GPS al salir del radio de Base A y al volver a él
+    function marcarSalida(id) {
+      Object.assign(vueltaPorNumero(vueltaAbierta).filas.find(f => f.id === id), { estado: "pista", salioReal: ahoraMinutos() });
+      actualizarVuelta("");
+    }
+
+    function marcarRegreso(id) {
+      Object.assign(vueltaPorNumero(vueltaAbierta).filas.find(f => f.id === id), { estado: "regreso", regresoReal: ahoraMinutos() });
+      actualizarVuelta("");
+    }
+
+    function pedirReinicio() {
+      mostrarModal(`
+        <h3>¿Reiniciar la jornada de hoy?</h3>
+        <p>Se borran la cola, las vueltas y sus horas. Solo para pruebas.</p>
+        <div class="acciones">
+          <button class="btn" data-accion="no">✗ Cancelar</button>
+          <button class="btn btn-no" data-accion="si">Reiniciar</button>
+        </div>
+      `, accion => {
+        if (accion !== "si") return;
+        jornada = jornadaVacia();
+        guardarJornada();
+        pintarAsistencia();
+      });
+    }
+
+    // ============================================================
+    // ARRANQUE
+    // ============================================================
+    // Cambios hechos en la Configuración (u otra pestaña de Asistencia) se reflejan al instante
+    window.addEventListener("storage", e => {
+      if (e.key === CLAVE_JORNADA) cargarJornada();
+      else if (e.key === null || e.key.startsWith("config_")) cargarConfiguracion();
+      else return;
+      pintarPantalla();
+    });
+
+    document.getElementById("btnMenu").onclick = () => document.getElementById("menu").classList.toggle("abierto");
+
+    cargarConfiguracion();
+    cargarJornada();
+    pintarPantalla();
+  </script>
+</body>
+</html>

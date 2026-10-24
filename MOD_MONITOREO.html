@@ -1,0 +1,1053 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Módulo de Ruta y Monitoreo</title>
+  <style>
+    :root {
+      --primario: #1f6feb;
+      --primario-suave: #e8f0fe;
+      --fondo: #f4f6f9;
+      --superficie: #ffffff;
+      --borde: #dde2ea;
+      --texto: #1c2430;
+      --texto-suave: #5f6b7a;
+      --ancho-menu: 250px;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: "Segoe UI", system-ui, sans-serif;
+      font-size: 14px;
+      background: var(--fondo);
+      color: var(--texto);
+    }
+
+    /* ---------- Encabezado ---------- */
+    .encabezado {
+      height: 56px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 0 16px;
+      background: var(--superficie);
+      border-bottom: 1px solid var(--borde);
+      position: sticky;
+      top: 0;
+      z-index: 1100;
+    }
+    /* Pestañas de módulos: cada módulo es su propio archivo HTML */
+    .pestanas { display: flex; gap: 4px; height: 100%; overflow-x: auto; }
+    .pestanas a {
+      display: flex;
+      align-items: center;
+      padding: 0 14px;
+      border-bottom: 3px solid transparent;
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--texto-suave);
+      text-decoration: none;
+      white-space: nowrap;
+    }
+    .pestanas a.activo { color: var(--primario); border-bottom-color: var(--primario); }
+    .btn-menu {
+      display: none;
+      border: 1px solid var(--borde);
+      background: none;
+      border-radius: 6px;
+      padding: 6px 10px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+
+    /* ---------- Estructura ---------- */
+    .contenedor { display: flex; min-height: calc(100vh - 56px); }
+
+    /* ---------- Menú lateral de submódulos ---------- */
+    .menu {
+      width: var(--ancho-menu);
+      flex-shrink: 0;
+      background: var(--superficie);
+      border-right: 1px solid var(--borde);
+      padding: 16px 10px;
+    }
+    .menu-titulo {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      color: var(--texto-suave);
+      margin: 0 8px 8px;
+    }
+    .menu button {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 9px 10px;
+      border: none;
+      border-radius: 6px;
+      background: var(--primario-suave);
+      font: inherit;
+      font-weight: 600;
+      color: var(--primario);
+      text-align: left;
+      cursor: pointer;
+    }
+    .menu .icono { width: 20px; text-align: center; }
+
+    /* ---------- Contenido ---------- */
+    .contenido { flex: 1; padding: 24px; min-width: 0; }
+    .contenido h2 { margin: 0 0 4px; font-size: 20px; }
+    .contenido .descripcion { margin: 0 0 20px; color: var(--texto-suave); }
+
+    .panel {
+      background: var(--superficie);
+      border: 1px solid var(--borde);
+      border-radius: 10px;
+      padding: 24px;
+    }
+    .marcador {
+      border: 2px dashed var(--borde);
+      border-radius: 8px;
+      padding: 40px 16px;
+      text-align: center;
+      color: var(--texto-suave);
+    }
+    .panel + .panel { margin-top: 16px; }
+    .panel h3 { margin: 0 0 4px; font-size: 16px; }
+
+    /* ---------- Botones ---------- */
+    .ayuda { color: var(--texto-suave); }
+    .acciones { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; flex-wrap: wrap; }
+    .centrado { justify-content: center; }
+    .btn {
+      padding: 9px 18px;
+      border-radius: 6px;
+      border: 1px solid var(--borde);
+      background: var(--superficie);
+      font: inherit;
+      color: var(--texto);
+      text-decoration: none;
+      cursor: pointer;
+    }
+    .btn-primario { background: var(--primario); border-color: var(--primario); color: #fff; font-weight: 600; }
+    .btn:disabled { opacity: .5; cursor: not-allowed; }
+    .btn-ok { background: #1a7f37; border-color: #1a7f37; color: #fff; font-weight: 600; }
+    .btn-no { background: #d1242f; border-color: #d1242f; color: #fff; font-weight: 600; }
+    .texto-error { color: #d1242f; }
+    .aviso {
+      margin-top: 14px;
+      padding: 10px 12px;
+      border-radius: 6px;
+      background: #e6f4ea;
+      color: #1a7f37;
+    }
+    .selector-numero { display: flex; align-items: center; gap: 8px; }
+    .selector-numero .btn { width: 44px; height: 44px; padding: 0; font-size: 20px; font-weight: 700; }
+    .selector-numero strong { min-width: 80px; text-align: center; font-size: 15px; }
+    .switch { display: flex; align-items: center; gap: 6px; font-size: 13px; cursor: pointer; }
+    .switch input { width: 18px; height: 18px; accent-color: #1a7f37; }
+    .simulador summary { cursor: pointer; font-size: 13px; color: var(--texto-suave); }
+
+    /* ---------- Mapa telemático (mitad superior) ---------- */
+    #mapa {
+      height: 45vh;
+      min-height: 300px;
+      border: 1px solid var(--borde);
+      border-radius: 8px;
+      background: var(--fondo);
+    }
+    #mapa .marcador { height: 100%; display: flex; align-items: center; justify-content: center; flex-direction: column; }
+    .punto-osm, .unidad-osm {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 2px solid #fff;
+      color: #fff;
+      font: 700 11px/1 "Segoe UI", system-ui, sans-serif;
+      box-shadow: 0 1px 4px rgba(0,0,0,.35);
+    }
+    .punto-osm { border-radius: 50%; }
+    .unidad-osm { border-radius: 6px; white-space: nowrap; }
+    .leyenda { display: flex; gap: 6px 16px; flex-wrap: wrap; margin-top: 10px; font-size: 12px; color: var(--texto-suave); }
+    .leyenda i { display: inline-block; width: 12px; height: 12px; margin-right: 4px; border-radius: 3px; vertical-align: -2px; }
+
+    /* ---------- Tablas de control por vuelta (mitad inferior) ---------- */
+    .tabla-caja { overflow-x: auto; margin-top: 12px; border: 1px solid var(--borde); border-radius: 8px; }
+    .tabla-vuelta { width: 100%; border-collapse: collapse; font-size: 13px; }
+    .tabla-vuelta th, .tabla-vuelta td { padding: 7px 10px; border-bottom: 1px solid var(--borde); text-align: center; white-space: nowrap; }
+    .tabla-vuelta th { background: var(--fondo); font-size: 12px; color: var(--texto-suave); }
+    .tabla-vuelta tbody tr { cursor: pointer; }
+    .tabla-vuelta tbody tr:hover { background: var(--primario-suave); }
+    .tabla-vuelta .unidad { text-align: left; }
+    .tabla-vuelta .unidad span { display: block; font-size: 11px; color: var(--texto-suave); }
+    .tabla-vuelta td small { display: block; font-size: 11px; font-weight: 400; color: #8c959f; }
+    .tabla-vuelta td strong { display: block; }
+    .tabla-vuelta .meta { color: #a3acb9; }
+    .tag-desvio { display: block; margin-top: 3px; padding: 1px 6px; border-radius: 4px; background: #8250df; color: #fff; font-size: 10px; }
+    .tabla-vuelta .a-tiempo { background: #e6f4ea; color: #1a7f37; font-weight: 600; }
+    .tabla-vuelta .demorado { background: #fff4d6; color: #8a5a00; font-weight: 600; }
+    .tabla-vuelta .correteo { background: #fde7e9; color: #b4232c; font-weight: 600; }
+    .tabla-vuelta .omitido { color: var(--texto-suave); font-style: italic; }
+    .tabla-vuelta .truncado { background: #eceff3; color: var(--texto-suave); font-size: 12px; }
+    .credito { margin-left: 4px; padding: 1px 5px; border-radius: 999px; background: var(--primario); color: #fff; font-size: 10px; }
+
+    /* ---------- Barra de licencia ---------- */
+    .barra-licencia {
+      display: flex;
+      align-items: center;
+      gap: 8px 16px;
+      flex-wrap: wrap;
+      padding: 8px 16px;
+      background: var(--superficie);
+      border-bottom: 1px solid var(--borde);
+      font-size: 13px;
+    }
+    .insignia { padding: 3px 10px; border-radius: 999px; font-size: 12px; font-weight: 600; }
+    .insignia.al-dia { background: #e6f4ea; color: #1a7f37; }
+    .insignia.gracia { background: #fff4d6; color: #8a5a00; }
+    .insignia.vencida { background: #fde7e9; color: #b4232c; }
+    .alerta-licencia { flex-basis: 100%; padding: 8px 10px; border-radius: 6px; background: #fff4d6; color: #5c4400; }
+    .alerta-licencia.vencida { background: #fde7e9; color: #7a1a20; }
+
+    /* ---------- Ventanillas ---------- */
+    .modal-fondo {
+      position: fixed;
+      inset: 0;
+      z-index: 2000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      background: rgba(0,0,0,.4);
+    }
+    .modal {
+      position: relative;
+      width: 100%;
+      max-width: 460px;
+      max-height: calc(100vh - 32px);
+      overflow-y: auto;
+      padding: 20px;
+      border-radius: 10px;
+      background: var(--superficie);
+      box-shadow: 0 10px 30px rgba(0,0,0,.2);
+    }
+    .modal h3 { margin: 0 0 8px; font-size: 16px; padding-right: 40px; }
+    .modal p { margin: 8px 0 0; color: var(--texto-suave); }
+    .cerrar-x {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      width: 32px;
+      height: 32px;
+      border: 1px solid var(--borde);
+      border-radius: 6px;
+      background: var(--superficie);
+      font-size: 16px;
+      cursor: pointer;
+    }
+    /* Notificación flotante que no bloquea la pantalla */
+    .notificacion {
+      position: fixed;
+      right: 16px;
+      bottom: 16px;
+      z-index: 1500;
+      width: calc(100% - 32px);
+      max-width: 380px;
+      padding: 16px;
+      border: 1px solid #d8c7f5;
+      border-radius: 10px;
+      background: var(--superficie);
+      box-shadow: 0 10px 30px rgba(0,0,0,.2);
+    }
+    .notificacion p { margin: 6px 0 0; color: var(--texto-suave); }
+    .notificacion .acciones { margin-top: 12px; }
+    .prueba-cruce { margin-top: 16px; padding: 12px; border: 1px dashed var(--borde); border-radius: 8px; }
+
+    /* ---------- Celular ---------- */
+    @media (max-width: 768px) {
+      .btn-menu { display: inline-block; }
+      .menu {
+        position: fixed;
+        top: 56px;
+        bottom: 0;
+        left: 0;
+        z-index: 1050;
+        transform: translateX(-100%);
+        transition: transform .2s;
+      }
+      .menu.abierto { transform: translateX(0); box-shadow: 4px 0 16px rgba(0,0,0,.1); }
+      .contenido { padding: 16px; }
+      .panel { padding: 16px; }
+    }
+  </style>
+</head>
+<body>
+
+  <header class="encabezado">
+    <button class="btn-menu" id="btnMenu" aria-label="Abrir menú">☰</button>
+    <nav class="pestanas">
+      <a href="MOD_CONFIGURACION.html">⚙️ Configuración</a>
+      <a href="MOD_ASISTENCIA.html">📋 Asistencia y Saque</a>
+      <a class="activo" href="MOD_MONITOREO.html">📡 Ruta y Monitoreo</a>
+    </nav>
+  </header>
+
+  <div class="barra-licencia" id="barraLicencia"></div>
+
+  <div class="contenedor">
+    <nav class="menu" id="menu">
+      <p class="menu-titulo">Submódulos</p>
+      <button><span class="icono">📡</span>Ruta y Monitoreo en Vivo</button>
+    </nav>
+
+    <main class="contenido">
+      <h2>📡 Ruta y Monitoreo en Vivo</h2>
+      <p class="descripcion">Mapa telemático de la ruta del día y tablas de control por vuelta (Base A ➔ Base B ➔ Base A).</p>
+      <section class="panel">
+        <div id="mapa"></div>
+        <div class="leyenda" id="leyenda"></div>
+      </section>
+      <div id="zonaTablas"></div>
+      <details class="simulador panel" id="simulador">
+        <summary>🔧 Modo prueba (en el APK lo hace el GPS)</summary>
+        <label class="switch" style="margin-top: 12px">
+          <input type="checkbox" onchange="simularGPS = this.checked">
+          Al tocar una fila, mostrar el botón para registrar el cruce del siguiente control o base
+        </label>
+      </details>
+    </main>
+  </div>
+
+  <div id="notificacion"></div>
+  <div id="modal"></div>
+
+  <script>
+    // ============================================================
+    // CONEXIÓN CON LOS MÓDULOS DE CONFIGURACIÓN Y ASISTENCIA
+    // Lee la configuración (ruta, desvíos, controles, tolerancia, padrón) y la jornada de la
+    // Asistencia. Registra los cruces de cada unidad en la misma jornada, así la Asistencia
+    // ve al instante quién salió, quién regresó y quién quedó fuera de servicio.
+    // ============================================================
+    const CONFIGURACION = "MOD_CONFIGURACION.html", ASISTENCIA = "MOD_ASISTENCIA.html";
+    const CLAVES = {
+      licencia: "config_licencia",
+      ruta: "config_ruta_oficial",
+      desvios: "config_desvios",
+      controles: "config_controles",
+      horarios: "config_horarios",
+      flota: "config_flota"
+    };
+    const CLAVE_JORNADA = "asistencia_jornada";
+    const DIAS_GRACIA = 3;
+    const RADIO_BASE = 50, RADIO_CONTROL = 25; // metros
+    const COLOR = {
+      base: "#1c2430", ida: "#1f6feb", regreso: "#e8590c", control: "#0b7285", omitido: "#8c959f",
+      desvio: "#1a7f37", esquivado: "#d1242f", aTiempo: "#1a7f37", demorado: "#d4a000", correteo: "#d1242f",
+      sinCruce: "#5f6b7a", averia: "#1c2430"
+    };
+    const MESES = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+    const SENTIDOS = { ida: "Ida (A → B)", regreso: "Regreso (B → A)" };
+    const LEAFLET = "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet";
+
+    function leer(clave, defecto) {
+      try { return JSON.parse(localStorage.getItem(clave)) ?? defecto; } catch (e) { return defecto; }
+    }
+
+    let cfg = {}; // copia de la configuración vigente
+    function cargarConfiguracion() {
+      const sentidoVacio = () => ({ puntos: [], fin: { valle: null, punta: null } });
+      const ruta = leer(CLAVES.ruta, null);
+      cfg = {
+        ruta: ruta && ruta.caminoIda && ruta.caminoRegreso ? ruta : null,
+        desvios: leer(CLAVES.desvios, []),
+        controles: leer(CLAVES.controles, { ida: sentidoVacio(), regreso: sentidoVacio() }),
+        horarios: leer(CLAVES.horarios, { tolerancia: 2, franjas: [] }),
+        flota: leer(CLAVES.flota, { solicitudes: [], padron: [] })
+      };
+    }
+
+    // Jornada de hoy creada en la Asistencia (null si aún no existe)
+    let jornada = null;
+    function cargarJornada() {
+      const j = leer(CLAVE_JORNADA, null);
+      jornada = j && j.fecha === hoyISO() ? { llegadas: {}, averiados: [], desvios: {}, ...j } : null;
+    }
+
+    function guardarJornada() {
+      try { localStorage.setItem(CLAVE_JORNADA, JSON.stringify(jornada)); } catch (e) {}
+    }
+
+    // ---------- Utilidades ----------
+    function esc(texto) {
+      return String(texto).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+    }
+
+    const dosCifras = x => String(x).padStart(2, "0");
+    const fechaISO = fecha => `${fecha.getFullYear()}-${dosCifras(fecha.getMonth() + 1)}-${dosCifras(fecha.getDate())}`;
+    const hoyISO = () => fechaISO(new Date());
+    const fechaLarga = fecha => `${fecha.getDate()} de ${MESES[fecha.getMonth()]} de ${fecha.getFullYear()}`;
+    const ahoraMinutos = () => { const d = new Date(); return d.getHours() * 60 + d.getMinutes(); };
+
+    // Horas guardadas en minutos desde la medianoche, mostradas en 12 h: "06:30 PM"
+    function horaDe(min) {
+      const h = Math.floor(min / 60) % 24;
+      return `${dosCifras(h % 12 || 12)}:${dosCifras(min % 60)} ${h < 12 ? "AM" : "PM"}`;
+    }
+
+    const datosConductor = id => cfg.flota.padron.find(c => c.id === id) || { padron: "?", nombreCompleto: "(ya no figura en el padrón)" };
+    const etiquetaPadron = c => `Padrón ${dosCifras(c.padron)}`;
+    const vueltaPorNumero = n => jornada.vueltas.find(v => v.numero === n);
+    const vueltaCompleta = v => v.filas.length > 0 && v.filas.every(f => f.estado === "regreso" || f.estado === "averia");
+
+    let cargas = {};
+    function cargarScript(src, css) {
+      if (!cargas[src]) cargas[src] = new Promise((listo, falla) => {
+        const hoja = document.createElement("link");
+        hoja.rel = "stylesheet";
+        hoja.href = css;
+        document.head.appendChild(hoja);
+        const s = document.createElement("script");
+        s.src = src;
+        s.onload = listo;
+        s.onerror = () => { delete cargas[src]; s.remove(); falla(); };
+        document.head.appendChild(s);
+      });
+      return cargas[src];
+    }
+
+    // ---------- Licencia (se administra en la Configuración) ----------
+    function estadoLicencia() {
+      const l = { activacion: hoyISO(), mesesPagados: 1, ...leer(CLAVES.licencia, {}) };
+      // Ciclo de fecha fija; si el mes no tiene ese día, vence el último día del mes
+      const [a, m, d] = l.activacion.split("-").map(Number);
+      const vence = new Date(a, m - 1 + l.mesesPagados, Math.min(d, new Date(a, m + l.mesesPagados, 0).getDate()));
+      const hoy = new Date();
+      hoy.setHours(0, 0, 0, 0);
+      const diasVencido = Math.round((hoy - vence) / 86400000);
+      const finGracia = new Date(vence);
+      finGracia.setDate(finGracia.getDate() + DIAS_GRACIA);
+      const estado = diasVencido <= 0 ? "al-dia" : diasVencido <= DIAS_GRACIA ? "gracia" : "vencida";
+      return { vence, finGracia, estado, diasRestantes: DIAS_GRACIA - diasVencido };
+    }
+
+    function pintarLicencia() {
+      const e = estadoLicencia();
+      const insignias = {
+        "al-dia": "Licencia Activa / Al Día",
+        gracia: "Pago Pendiente - Período de Gracia",
+        vencida: "Licencia Vencida"
+      };
+      const alertas = {
+        gracia: `⚠ El plazo venció y el pago aún no se registra. La salida de los carros <strong>no se bloquea</strong>: quedan ${e.diasRestantes} día(s) de tolerancia (hasta el ${fechaLarga(e.finGracia)}) para regularizar el abono.`,
+        vencida: `⛔ El período de gracia terminó el ${fechaLarga(e.finGracia)}. Regulariza el pago para reactivar el servicio.`
+      };
+      document.getElementById("barraLicencia").innerHTML = `
+        <span class="insignia ${e.estado}">${insignias[e.estado]}</span>
+        <span>Vence: <strong>${fechaLarga(e.vence)}</strong></span>
+        ${alertas[e.estado] ? `<div class="alerta-licencia ${e.estado}">${alertas[e.estado]}</div>` : ""}
+      `;
+    }
+
+    // ---------- Geometría de la ruta ----------
+    function distanciaMetros(a, b) {
+      const rad = x => x * Math.PI / 180;
+      const dLat = rad(b.lat - a.lat), dLng = rad(b.lng - a.lng);
+      const h = Math.sin(dLat / 2) ** 2 + Math.cos(rad(a.lat)) * Math.cos(rad(b.lat)) * Math.sin(dLng / 2) ** 2;
+      return 2 * 6371000 * Math.asin(Math.sqrt(h));
+    }
+
+    // Punto más cercano sobre el camino; "posicion" = tramo + fracción, para saber qué tan adelante está
+    function imantar(p, camino) {
+      let mejor = null;
+      const k = Math.cos(p.lat * Math.PI / 180);
+      for (let i = 0; i < camino.length - 1; i++) {
+        const a = camino[i], b = camino[i + 1];
+        const ax = (a.lng - p.lng) * k, ay = a.lat - p.lat;
+        const dx = (b.lng - a.lng) * k, dy = b.lat - a.lat;
+        const largo = dx * dx + dy * dy;
+        const t = largo ? Math.max(0, Math.min(1, -(ax * dx + ay * dy) / largo)) : 0;
+        const x = ax + t * dx, y = ay + t * dy, d = x * x + y * y;
+        if (!mejor || d < mejor.d) {
+          mejor = { d, posicion: i + t, punto: { lat: a.lat + t * (b.lat - a.lat), lng: a.lng + t * (b.lng - a.lng) } };
+        }
+      }
+      return { posicion: mejor.posicion, punto: mejor.punto };
+    }
+
+    const caminoOficial = s => s === "ida" ? cfg.ruta.caminoIda : cfg.ruta.caminoRegreso;
+
+    // Punto del camino en una posición (tramo + fracción)
+    function puntoEn(camino, pos) {
+      const i = Math.max(0, Math.min(Math.floor(pos), camino.length - 2)), t = pos - i, a = camino[i], b = camino[i + 1];
+      return { lat: a.lat + t * (b.lat - a.lat), lng: a.lng + t * (b.lng - a.lng) };
+    }
+
+    function tramoEntre(camino, desde, hasta) {
+      return [puntoEn(camino, desde), ...camino.slice(Math.floor(desde) + 1, Math.floor(hasta) + 1), puntoEn(camino, hasta)];
+    }
+
+    // ---------- Desvíos del día (Submódulo 3) ----------
+    const estaActivo = d => d.fechas.includes(hoyISO());
+    const desviosDeHoy = s => cfg.desvios.filter(d => d.sentido === s && estaActivo(d) && d.inicio && d.fin)
+      .sort((a, b) => a.inicio.posicion - b.inicio.posicion);
+
+    // Controles esquivados: sobre la ruta oficial, entre la Salida y la Entrada del desvío
+    function puntosOmitidos(d) {
+      const camino = caminoOficial(d.sentido);
+      return cfg.controles[d.sentido].puntos.filter(c => {
+        const s = imantar(c.punto, camino);
+        return distanciaMetros(c.punto, s.punto) <= RADIO_CONTROL && s.posicion >= d.inicio.posicion && s.posicion <= d.fin.posicion;
+      });
+    }
+
+    // Franja de hora punta que rige en ese momento (Submódulo 5)
+    function franjaVigente(ahora) {
+      const hoy = fechaISO(ahora), dia = (ahora.getDay() + 6) % 7;
+      const hora = `${dosCifras(ahora.getHours())}:${dosCifras(ahora.getMinutes())}`;
+      return cfg.horarios.franjas.find(f => f.activo && f.dias[dia] && f.vigenciaDesde <= hoy && hoy <= f.vigenciaHasta && f.desde <= hora && hora < f.hasta) || null;
+    }
+
+    function enHoraPunta(min) {
+      const d = new Date();
+      d.setHours(0, min, 0, 0);
+      return !!franjaVigente(d);
+    }
+
+    // ============================================================
+    // RECORRIDO DE CADA UNIDAD (ciclo completo Base A ➔ Base B ➔ Base A)
+    // "t" guarda los minutos valle/punta del tramo que termina en ese punto (Submódulo 4).
+    // ============================================================
+    function secuencia() {
+      const controles = s => cfg.controles[s].puntos.map(c => ({
+        clave: `${s}:${c.id}`, s, pos: c.posicion, t: c, corto: c.nombre, nombre: `${c.nombre} (${s === "ida" ? "Ida" : "Regreso"})`
+      }));
+      return [
+        { clave: "salida", s: "ida", pos: 0, corto: "Base A", nombre: "Base A - Salida" },
+        ...controles("ida"),
+        { clave: "baseB", s: "ida", pos: cfg.ruta.caminoIda.length - 1, t: cfg.controles.ida.fin, corto: "Base B", nombre: "Base B - Retorno" },
+        ...controles("regreso"),
+        { clave: "baseA", s: "regreso", pos: cfg.ruta.caminoRegreso.length - 1, t: cfg.controles.regreso.fin, corto: "Base A", nombre: "Base A - Llegada Final" }
+      ];
+    }
+
+    const nombreCorto = clave => (secuencia().find(p => p.clave === clave) || { corto: clave }).corto;
+
+    // Hora real de cruce (null si aún no cruzó)
+    function horaReal(f, clave) {
+      const r = clave === "salida" ? f.salioReal : clave === "baseA" ? f.regresoReal : (f.cruces || {})[clave];
+      return r ?? null;
+    }
+
+    // ============================================================
+    // AUTOCALIBRACIÓN DE DESVÍOS (4.4.2 y 4.4.3)
+    // Cada desvío activo hoy deja un registro en la jornada: desde qué punto empieza el rodeo
+    // (anterior), dónde las unidades vuelven a la ruta oficial (reconexión) y su estado:
+    // midiendo → pregunta (promedio de 3 unidades) → agregado | sinMeta.
+    // ============================================================
+    const UNIDADES_MUESTRA = 3;
+    const BYPASS = { correteo: 2, planchado: 8 }; // minutos con el carro delantero (Submódulo 3)
+
+    // Puntos de un sentido en orden de marcha: base inicial, controles y base final
+    function puntosDeSentido(s) {
+      const sec = secuencia();
+      return s === "ida" ? sec.filter(p => p.s === "ida") : [{ clave: "baseB", pos: 0 }, ...sec.filter(p => p.s === "regreso")];
+    }
+
+    function registroDesvio(d) {
+      const puntos = puntosDeSentido(d.sentido);
+      const anterior = [...puntos].reverse().find(p => p.pos <= d.inicio.posicion) || puntos[0];
+      const reconexion = puntos.find(p => p.pos >= d.fin.posicion) || puntos.at(-1);
+      return {
+        id: d.id, nombre: d.nombre, sentido: d.sentido, anterior: anterior.clave, reconexion: reconexion.clave,
+        omitidos: puntos.slice(puntos.indexOf(anterior) + 1, puntos.indexOf(reconexion)).map(p => p.clave),
+        activo: true, modo: "midiendo", minutos: null, muestras: []
+      };
+    }
+
+    // Compara los desvíos activos hoy (Submódulo 3) con los registros de la jornada.
+    // Devuelve los desvíos que acaban de desactivarse.
+    function sincronizarDesvios() {
+      if (!jornada || !jornada.parametros || !cfg.ruta) return [];
+      const activos = cfg.desvios.filter(d => estaActivo(d) && d.inicio && d.fin), finalizados = [];
+      let cambio = false;
+      activos.forEach(d => {
+        const r = jornada.desvios[d.id];
+        if (!r) { jornada.desvios[d.id] = registroDesvio(d); cambio = true; }
+        else if (!r.activo) { Object.assign(r, registroDesvio(d)); cambio = true; } // reactivado: se mide de nuevo
+      });
+      Object.values(jornada.desvios).forEach(r => {
+        if (r.activo && !activos.some(d => d.id === r.id)) { r.activo = false; finalizados.push(r); cambio = true; }
+      });
+      if (cambio) guardarJornada();
+      return finalizados;
+    }
+
+    // Régimen del desvío para una fila: null = recorrido oficial; si no, { modo, retoma }.
+    // "retoma" = el desvío terminó mientras la unidad iba dentro: tras la reconexión vuelve a la cadena normal.
+    function regimen(f, r) {
+      const marca = (f.desvios || {})[r.id];
+      if (marca) return { modo: marca.modo ?? r.modo, retoma: marca.retoma ?? !r.activo };
+      return r.activo && horaReal(f, r.anterior) == null ? { modo: r.modo, retoma: false } : null;
+    }
+
+    // Hora meta de cada punto del ciclo (null = no se exige) con los minutos de tramo del Submódulo 4.
+    // Se corren según la hora real de salida de Base A.
+    function metasFila(f) {
+      const res = { salida: { meta: f.salida } }, registros = Object.values(jornada.desvios);
+      let t = f.salioReal ?? f.salida, sinMeta = false;
+      secuencia().slice(1).forEach(p => {
+        const r = registros.find(x => x.omitidos.includes(p.clave) || x.reconexion === p.clave), reg = r && regimen(f, r);
+        if (reg && r.omitidos.includes(p.clave)) { res[p.clave] = { meta: null, omitido: true, desvio: true }; return; }
+        if (reg) {
+          // Punto de reconexión: solo hay meta si se agregó el promedio medido
+          if (reg.modo === "agregado") t += r.minutos;
+          res[p.clave] = { meta: reg.modo === "agregado" && !sinMeta ? t : null, desvio: true };
+          const real = horaReal(f, p.clave);
+          if (reg.retoma) { sinMeta = real == null; if (real != null) t = real; }
+          else if (reg.modo !== "agregado") sinMeta = true;
+          return;
+        }
+        const minutos = p.t[enHoraPunta(t) ? "punta" : "valle"];
+        if (minutos == null) sinMeta = true;
+        else t += minutos;
+        res[p.clave] = { meta: sinMeta ? null : t };
+      });
+      return res;
+    }
+
+    // Carro delantero activo en la cadena del día (los averiados se saltan para no castigar al de atrás)
+    function delantero(f) {
+      const todas = jornada.vueltas.flatMap(v => v.filas);
+      for (let k = todas.indexOf(f) - 1; k >= 0; k--) if (todas[k].estado !== "averia") return todas[k];
+      return null;
+    }
+
+    // Hora Meta + Hora Real + Frecuencia respecto al anterior, con su semáforo:
+    // con meta, la Tolerancia del Submódulo 5; sin meta (desvío), la separación con el delantero.
+    function evaluar(f, clave, metas) {
+      const m = metas[clave] || { meta: null }, real = horaReal(f, clave), d = delantero(f);
+      const realDelantero = d ? horaReal(d, clave) : null;
+      const frec = real != null && realDelantero != null ? real - realDelantero : null;
+      let semaforo = null;
+      if (real != null) {
+        const tol = cfg.horarios.tolerancia, dif = m.meta != null ? real - m.meta : null;
+        if (dif != null) semaforo = dif > tol ? { clase: "demorado", extra: `(+${dif})` }
+          : dif < -tol ? { clase: "correteo", extra: `(${dif})` } : { clase: "a-tiempo", extra: "" };
+        else semaforo = frec != null && frec < BYPASS.correteo ? { clase: "correteo", extra: "(correteo)" }
+          : frec != null && frec > BYPASS.planchado ? { clase: "demorado", extra: "(planchado)" } : { clase: "a-tiempo", extra: "" };
+        semaforo.color = { "a-tiempo": COLOR.aTiempo, demorado: COLOR.demorado, correteo: COLOR.correteo }[semaforo.clase];
+      }
+      return { ...m, real, frec, semaforo, realDelantero };
+    }
+
+    // Siguiente punto que la unidad debe cruzar (los omitidos por desvío se saltan)
+    function siguientePunto(f, metas) {
+      if (f.estado === "averia" || f.estado === "regreso") return null;
+      return secuencia().find(p => horaReal(f, p.clave) == null && !(metas[p.clave] || {}).omitido) || null;
+    }
+
+    // Notificación flotante (no bloquea) cuando las 3 primeras unidades ya cruzaron el desvío
+    function pintarNotificacion() {
+      const r = jornada && Object.values(jornada.desvios).find(x => x.activo && x.modo === "pregunta");
+      document.getElementById("notificacion").innerHTML = r ? `
+        <div class="notificacion" role="status">
+          <strong>🚧 Desvío «${esc(r.nombre)}»</strong>
+          <p>Desde ${esc(nombreCorto(r.anterior))} hasta ${esc(nombreCorto(r.reconexion))}, el tiempo promedio real del desvío es de
+            <strong>${r.minutos} min</strong> (calculado con ${UNIDADES_MUESTRA} unidades). ¿Deseas agregar este tiempo?</p>
+          <div class="acciones">
+            <button class="btn" onclick="decidirDesvio('${r.id}', false)">✗ No Agregar</button>
+            <button class="btn btn-ok" onclick="decidirDesvio('${r.id}', true)">✓ Agregar</button>
+          </div>
+        </div>` : "";
+    }
+
+    function decidirDesvio(id, agregar) {
+      const r = jornada.desvios[id];
+      r.modo = agregar ? "agregado" : "sinMeta";
+      guardarJornada();
+      pintarTodo(agregar
+        ? `📲 Se agregaron ${r.minutos} min al tramo ${esc(nombreCorto(r.anterior))} → ${esc(nombreCorto(r.reconexion))}: horas meta reencadenadas y enviadas al celular de los conductores.`
+        : `Desvío «${esc(r.nombre)}» sin hora meta: las unidades se guían por Hora Real y Frecuencia con el carro delantero.`);
+    }
+
+    // ============================================================
+    // MAPA TELEMÁTICO (mitad superior)
+    // ============================================================
+    let mapa = null, capasRuta = [], capasUnidades = [];
+
+    function etiqueta(p, texto, color, clase, ancho) {
+      const icono = L.divIcon({
+        className: "",
+        iconSize: [ancho, 22],
+        iconAnchor: [ancho / 2, 11],
+        html: `<div class="${clase}" style="width:${ancho}px;height:22px;background:${color}">${texto}</div>`
+      });
+      return L.marker(p, { icon: icono, interactive: false });
+    }
+
+    function montarMapa() {
+      const div = document.getElementById("mapa");
+      if (!cfg.ruta) {
+        div.innerHTML = `<div class="marcador">Primero guarda la Ruta Oficial en la Configuración.
+          <div class="acciones centrado"><a class="btn btn-primario" href="${CONFIGURACION}#ruta">Ir a Trazado de Ruta</a></div></div>`;
+        return;
+      }
+      div.innerHTML = `<div class="marcador">Cargando mapa…</div>`;
+      cargarScript(LEAFLET + ".js", LEAFLET + ".css").then(() => {
+        if (mapa || !cfg.ruta) return;
+        div.innerHTML = "";
+        mapa = L.map(div);
+        L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", { maxZoom: 19, attribution: "© OpenStreetMap" }).addTo(mapa);
+        dibujarRuta();
+        dibujarUnidades();
+        mapa.fitBounds(L.latLngBounds(cfg.ruta.caminoIda.concat(cfg.ruta.caminoRegreso)), { padding: [30, 30] });
+      }).catch(() => { div.innerHTML = `<div class="marcador">No se pudo cargar el mapa. Revisa tu conexión a internet.</div>`; });
+    }
+
+    // Ruta oficial con el puente del desvío del día en lugar del tramo esquivado
+    function dibujarRuta() {
+      capasRuta.forEach(c => c.remove());
+      capasRuta = [];
+      const poner = capa => capasRuta.push(capa.addTo(mapa));
+      const linea = (camino, color, punteada) => poner(L.polyline(camino, {
+        color, weight: punteada ? 3 : 5, opacity: .85, dashArray: punteada ? "6 8" : null, interactive: false
+      }));
+
+      ["ida", "regreso"].forEach(s => {
+        const camino = caminoOficial(s), hoy = desviosDeHoy(s), omitidos = hoy.flatMap(puntosOmitidos);
+        let desde = 0;
+        hoy.forEach(d => {
+          if (d.inicio.posicion > desde) linea(tramoEntre(camino, desde, d.inicio.posicion), COLOR[s]);
+          linea(tramoEntre(camino, d.inicio.posicion, d.fin.posicion), COLOR.esquivado, true);
+          linea(d.camino && d.camino.length ? d.camino : [d.inicio.punto, d.fin.punto], COLOR.desvio);
+          desde = Math.max(desde, d.fin.posicion);
+        });
+        linea(tramoEntre(camino, desde, camino.length - 1), COLOR[s]);
+        cfg.controles[s].puntos.forEach((c, i) => {
+          const fuera = omitidos.includes(c);
+          poner(L.circle(c.punto, { radius: RADIO_CONTROL, color: fuera ? COLOR.omitido : COLOR.control, weight: 1, fillOpacity: .12, interactive: false }));
+          poner(etiqueta(c.punto, fuera ? "Ø" : String(i + 1), fuera ? COLOR.omitido : COLOR.control, "punto-osm", 22));
+        });
+      });
+
+      const a = cfg.ruta.caminoIda[0], b = cfg.ruta.caminoIda.at(-1);
+      [[a, "A"], [b, "B"]].forEach(([p, nombre]) => {
+        poner(L.circle(p, { radius: RADIO_BASE, color: COLOR.base, weight: 1, fillOpacity: .12, interactive: false }));
+        poner(etiqueta(p, nombre, COLOR.base, "punto-osm", 26));
+      });
+    }
+
+    // Posición estimada entre el último punto cruzado y el siguiente, según la hora
+    // (sin hora meta, por ejemplo dentro de un desvío, se dibuja a mitad de camino)
+    function posicionUnidad(f, metas) {
+      const sec = secuencia();
+      let k = -1;
+      sec.forEach((p, i) => { if (horaReal(f, p.clave) != null) k = i; });
+      if (k < 0) return null;
+      const a = sec[k], b = f.estado === "averia" ? null : siguientePunto(f, metas);
+      if (!b) return { punto: puntoEn(caminoOficial(a.s), a.pos), ultimo: a };
+      const tA = horaReal(f, a.clave), tB = (metas[b.clave] || {}).meta;
+      const fraccion = tB == null ? .5 : tB > tA ? Math.min(.95, Math.max(0, (ahoraMinutos() - tA) / (tB - tA))) : 0;
+      const desde = a.s === b.s ? a.pos : 0;
+      return { punto: puntoEn(caminoOficial(b.s), desde + fraccion * (b.pos - desde)), ultimo: a };
+    }
+
+    // Íconos de las combis en pista con su padrón y el color de su último cruce
+    function dibujarUnidades() {
+      if (!mapa) return;
+      capasUnidades.forEach(c => c.remove());
+      capasUnidades = [];
+      if (!jornada) return;
+      jornada.vueltas.forEach(v => v.filas.forEach(f => {
+        if (f.estado !== "pista" && f.estado !== "averia") return;
+        const metas = metasFila(f), p = posicionUnidad(f, metas);
+        if (!p) return;
+        const c = datosConductor(f.id);
+        const color = f.estado === "averia" ? COLOR.averia : evaluar(f, p.ultimo.clave, metas).semaforo.color;
+        const texto = `${f.estado === "averia" ? "⛔ " : ""}P${dosCifras(c.padron)}`;
+        capasUnidades.push(etiqueta(p.punto, texto, color, "unidad-osm", f.estado === "averia" ? 52 : 38).setZIndexOffset(2000).addTo(mapa));
+      }));
+    }
+
+    function pintarLeyenda() {
+      const hoy = cfg.ruta ? ["ida", "regreso"].flatMap(desviosDeHoy) : [];
+      const muestra = (color, texto) => `<span><i style="background:${color}"></i>${texto}</span>`;
+      document.getElementById("leyenda").innerHTML = `
+        <span>Ruta del día: <strong>${hoy.length ? hoy.map(d => `desvío «${esc(d.nombre)}» (${SENTIDOS[d.sentido]})`).join("; ") : "Ruta Oficial"}</strong></span>
+        ${muestra(COLOR.ida, "Ida")}${muestra(COLOR.regreso, "Regreso")}
+        ${hoy.length ? muestra(COLOR.desvio, "Puente del desvío") + muestra(COLOR.esquivado, "Tramo esquivado") + muestra(COLOR.omitido, "Control omitido (Ø)") : ""}
+        ${muestra(COLOR.aTiempo, "A tiempo")}${muestra(COLOR.demorado, "Demorado / planchado")}${muestra(COLOR.correteo, "Correteo")}
+        <span>Tolerancia ±${cfg.horarios.tolerancia} min · En desvío sin meta: frecuencia con el delantero (menos de ${BYPASS.correteo} min = correteo, más de ${BYPASS.planchado} min = planchado)</span>
+      `;
+    }
+
+    // ============================================================
+    // TABLAS DE CONTROL POR VUELTA (mitad inferior)
+    // ============================================================
+    // La Vuelta 1 empieza con «Base A - Llegada» (hora en que la unidad se presentó al amanecer);
+    // desde la Vuelta 2, esa hora ya figura como «Base A - Llegada Final» de la vuelta anterior.
+    function columnas(v) {
+      const lista = secuencia();
+      return v.numero === 1 ? [{ clave: "llegada", nombre: "Base A - Llegada" }, ...lista] : lista;
+    }
+
+    // Cada celda muestra siempre Hora Meta, Hora Real y Frecuencia respecto al carro delantero
+    function celdaHTML(f, col, metas) {
+      if (col.clave === "llegada") {
+        const t = jornada.llegadas[f.id];
+        return t != null ? `<td><strong>${horaDe(t)}</strong></td>` : `<td class="meta">—</td>`;
+      }
+      const e = evaluar(f, col.clave, metas);
+      if (e.real == null && e.omitido) return `<td class="omitido">[ Omitido ]</td>`;
+      if (e.real == null && f.estado === "averia") return `<td class="truncado">[ Truncado por Avería ]</td>`;
+      const meta = e.meta != null ? `Meta ${horaDe(e.meta)}` : e.desvio ? "Sin meta (desvío)" : "Meta —";
+      const credito = e.real != null && (col.clave === "baseB" || col.clave === "baseA") ? `<span class="credito">+0.5</span>` : "";
+      const real = e.real != null ? `<strong>${horaDe(e.real)} ${e.semaforo.extra}${credito}</strong>` : `<strong class="meta">—</strong>`;
+      const frec = `<small>Frec. ${e.frec != null ? `${e.frec} min` : "—"}</small>`;
+      return `<td class="${e.real != null ? e.semaforo.clase : ""}"><small>${meta}</small>${real}${frec}</td>`;
+    }
+
+    // [ DESVÍO ]: desde el punto donde empieza el rodeo hasta el punto de reconexión
+    function enDesvio(clave) {
+      return Object.values(jornada.desvios).some(r => r.activo && (r.anterior === clave || r.reconexion === clave || r.omitidos.includes(clave)));
+    }
+
+    // Media vuelta por cada paso por Base B y por cada llegada final a Base A
+    const acreditado = f => (horaReal(f, "baseB") != null ? .5 : 0) + (horaReal(f, "baseA") != null ? .5 : 0);
+
+    function tablaHTML(v) {
+      const cols = columnas(v), cerrada = vueltaCompleta(v);
+      const total = v.filas.reduce((t, f) => t + acreditado(f), 0);
+      const filas = v.filas.map((f, i) => {
+        const c = datosConductor(f.id), metas = metasFila(f);
+        // Si el carro delantero quedó fuera de servicio, la referencia pasa al delantero activo
+        let nota = "";
+        if (f.estado === "averia") nota = `⛔ Avería${f.averiaEn != null ? ` ${horaDe(f.averiaEn)}` : ""}`;
+        else if (i > 0 && v.filas[i - 1].estado === "averia") {
+          const delantero = v.filas.slice(0, i).reverse().find(x => x.estado !== "averia");
+          nota = delantero ? `Referencia: ${etiquetaPadron(datosConductor(delantero.id))}` : "Referencia: primera de la vuelta";
+        }
+        return `
+          <tr onclick="abrirFicha(${v.numero}, '${f.id}')">
+            <td>${i + 1}°</td>
+            <td class="unidad">${etiquetaPadron(c)}<span>${esc(c.nombreCompleto)}</span>${nota ? `<span>${nota}</span>` : ""}</td>
+            ${cols.map(col => celdaHTML(f, col, metas)).join("")}
+          </tr>
+        `;
+      }).join("");
+      return `
+        <section class="panel">
+          <h3>${cerrada ? "🔒 " : v.intervalo ? "🌙 " : ""}Tabla de la Vuelta ${v.numero}${cerrada ? " · Completada" : ""}${v.intervalo ? ` · adicional, cada ${v.intervalo} min` : ""}</h3>
+          <p class="ayuda">Acreditado en esta vuelta: <strong>${total.toFixed(1)}</strong> de ${v.filas.length.toFixed(1)} vueltas (Ida +0.5 · Regreso +0.5). Toca una fila para ver la unidad.</p>
+          <div class="tabla-caja">
+            <table class="tabla-vuelta">
+              <thead><tr><th>N° Orden</th><th>Unidad</th>${cols.map(col => `<th>${esc(col.nombre)}${enDesvio(col.clave) ? `<span class="tag-desvio">DESVÍO</span>` : ""}</th>`).join("")}</tr></thead>
+              <tbody>${filas || `<tr><td colspan="${cols.length + 2}" class="meta">Esta vuelta no tiene unidades.</td></tr>`}</tbody>
+            </table>
+          </div>
+        </section>
+      `;
+    }
+
+    let ultimoAviso = ""; // queda visible hasta que llegue otro o se cierre con ✗
+
+    function pintarTablas(aviso = ultimoAviso) {
+      const zona = document.getElementById("zonaTablas");
+      if (!jornada || !jornada.parametros) {
+        zona.innerHTML = `
+          <section class="panel">
+            <div class="marcador">
+              Aún no se despacha la jornada de hoy: las tablas aparecen al confirmar el saque en la Asistencia.
+              <div class="acciones centrado"><a class="btn btn-primario" href="${ASISTENCIA}">Ir a Asistencia y Saque</a></div>
+            </div>
+          </section>`;
+        return;
+      }
+      if (!cfg.ruta) {
+        zona.innerHTML = `<section class="panel"><p class="texto-error">⚠ Sin Ruta Oficial no se pueden armar las tablas de control.</p></section>`;
+        return;
+      }
+      zona.innerHTML = (aviso ? `
+        <section class="panel" style="position: relative">
+          <button class="cerrar-x" onclick="ultimoAviso = ''; pintarTablas()" aria-label="Cerrar aviso" title="Cerrar">✗</button>
+          <div class="aviso" style="margin: 0 40px 0 0">${aviso}</div>
+        </section>` : "")
+        + jornada.vueltas.map(tablaHTML).join("");
+    }
+
+    // ============================================================
+    // FICHA DE LA UNIDAD: AVERÍA / FUERA DE SERVICIO Y MODO PRUEBA
+    // ============================================================
+    let ficha = null;      // { numero, id, confirmar }
+    let simularGPS = false;
+    let desfase = 0;       // Modo prueba: minutos de diferencia del cruce frente a su hora meta
+
+    const filaDeFicha = () => {
+      const v = ficha && jornada && vueltaPorNumero(ficha.numero);
+      return v ? v.filas.find(f => f.id === ficha.id) : null;
+    };
+
+    function abrirFicha(numero, id) {
+      ficha = { numero, id, confirmar: false };
+      pintarFicha();
+    }
+
+    // Las salidas van en el orden de la cola, y nadie sale mientras siga en pista en una vuelta anterior
+    function puedeSalir(v, f) {
+      for (const o of jornada.vueltas) for (const x of o.filas) if (x.estado === "espera") {
+        if (x !== f) return false;
+        return !jornada.vueltas.some(w => w.numero < v.numero && w.filas.some(y => y.id === f.id && y.estado === "pista"));
+      }
+      return false;
+    }
+
+    function pintarFicha() {
+      const f = filaDeFicha();
+      if (!f) return cerrarFicha();
+      const v = vueltaPorNumero(ficha.numero), c = datosConductor(f.id), metas = metasFila(f), sig = siguientePunto(f, metas);
+      const estado = {
+        espera: "En espera en Base A",
+        pista: "🚌 En pista",
+        regreso: "✔ Vuelta terminada en Base A",
+        averia: `⛔ Avería / Fuera de Servicio${f.averiaEn != null ? ` desde las ${horaDe(f.averiaEn)}` : ""}`
+      }[f.estado];
+
+      let prueba = "";
+      if (simularGPS && sig) {
+        const meta = metas[sig.clave].meta, base = horaPrueba(f, sig.clave, metas);
+        prueba = sig.clave === "salida" && !puedeSalir(v, f)
+          ? `<p class="ayuda">Esta unidad aún no puede salir: antes deben salir las de adelante o debe regresar de su vuelta anterior.</p>`
+          : `
+            <p><strong>Siguiente punto:</strong> ${esc(sig.nombre)} · ${meta != null ? `meta ${horaDe(meta)}` : "sin meta (se toma 5 min detrás del delantero)"}</p>
+            <div class="selector-numero" style="margin-top: 10px">
+              <button class="btn" onclick="cambiarDesfase(-1)" aria-label="Más temprano">−</button>
+              <strong>${desfase > 0 ? "+" : ""}${desfase} min</strong>
+              <button class="btn" onclick="cambiarDesfase(1)" aria-label="Más tarde">+</button>
+            </div>
+            <div class="acciones"><button class="btn btn-primario" onclick="registrarCruce()">📍 Registrar cruce a las ${horaDe(base + desfase)}</button></div>`;
+        prueba = `<div class="prueba-cruce"><p style="margin: 0">🔧 Modo prueba: simular el GPS</p>${prueba}</div>`;
+      }
+
+      document.getElementById("modal").innerHTML = `
+        <div class="modal-fondo"><div class="modal" role="dialog" aria-modal="true">
+          <button class="cerrar-x" onclick="cerrarFicha()" aria-label="Cerrar" title="Cerrar">✗</button>
+          <h3>${etiquetaPadron(c)} · Vuelta ${v.numero}</h3>
+          <p>${esc(c.nombreCompleto)} · ${estado} · Acreditado: ${acreditado(f).toFixed(1)}</p>
+          ${f.estado === "pista" ? `
+            <div class="acciones">
+              <button class="btn btn-no" onclick="marcarAveria()">${ficha.confirmar ? "¿Seguro? Toca otra vez" : "⛔ Avería / Fuera de Servicio"}</button>
+            </div>
+            <p class="ayuda">Las celdas que faltan quedarán como [ Truncado por Avería ] (no acreditan +0.5) y la unidad sale de las vueltas que aún no empezó.</p>` : ""}
+          ${prueba}
+        </div></div>
+      `;
+    }
+
+    function cerrarFicha() {
+      document.getElementById("modal").innerHTML = "";
+      ficha = null;
+    }
+
+    function cambiarDesfase(paso) {
+      desfase = Math.max(-30, Math.min(30, desfase + paso));
+      pintarFicha();
+    }
+
+    // Modo prueba: hora base del cruce simulado. Sin meta (desvío), 5 min detrás del delantero
+    // o, si no hay delantero, 10 min después del último cruce de la unidad.
+    function horaPrueba(f, clave, metas) {
+      const e = evaluar(f, clave, metas);
+      if (e.meta != null) return e.meta;
+      if (e.realDelantero != null) return e.realDelantero + 5;
+      const reales = secuencia().map(p => horaReal(f, p.clave)).filter(x => x != null);
+      return reales.length ? Math.max(...reales) + 10 : ahoraMinutos();
+    }
+
+    // Modo prueba: en el APK se registra solo al entrar al radio del control (25 m) o de la base (50 m)
+    function registrarCruce() {
+      const f = filaDeFicha(), metas = metasFila(f), sig = siguientePunto(f, metas);
+      const hora = horaPrueba(f, sig.clave, metas) + desfase;
+      if (sig.clave === "salida") Object.assign(f, { estado: "pista", salioReal: hora });
+      else if (sig.clave === "baseA") Object.assign(f, { estado: "regreso", regresoReal: hora });
+      else f.cruces = { ...f.cruces, [sig.clave]: hora };
+
+      // Desvíos: la unidad entra al rodeo al cruzar el punto anterior; al reconectar se fija su régimen
+      // y, mientras se mide, su tiempo cuenta para el promedio de las primeras 3 unidades.
+      Object.values(jornada.desvios).forEach(r => {
+        if (sig.clave === r.anterior && r.activo) f.desvios = { ...f.desvios, [r.id]: {} };
+        const marca = (f.desvios || {})[r.id];
+        if (sig.clave !== r.reconexion || !marca) return;
+        Object.assign(marca, { modo: r.modo, retoma: !r.activo });
+        if (r.activo && r.modo === "midiendo") {
+          r.muestras.push(hora - horaReal(f, r.anterior));
+          if (r.muestras.length === UNIDADES_MUESTRA) {
+            Object.assign(r, { modo: "pregunta", minutos: Math.round(r.muestras.reduce((a, b) => a + b, 0) / UNIDADES_MUESTRA) });
+          }
+        }
+      });
+      guardarJornada();
+      pintarTodo();
+    }
+
+    // Avería: trunca lo que falta de esta vuelta y retira la unidad de las vueltas que aún no empezó
+    function marcarAveria() {
+      if (!ficha.confirmar) { ficha.confirmar = true; return pintarFicha(); }
+      const f = filaDeFicha(), c = datosConductor(f.id);
+      Object.assign(f, { estado: "averia", averiaEn: ahoraMinutos() });
+      if (!jornada.averiados.includes(f.id)) jornada.averiados.push(f.id);
+      jornada.vueltas.forEach(v => { v.filas = v.filas.filter(x => !(x.id === f.id && x.estado === "espera")); });
+      guardarJornada();
+      cerrarFicha();
+      pintarTodo(`⛔ ${etiquetaPadron(c)} quedó fuera de servicio: se retiró de las vueltas que aún no empezaba.`);
+    }
+
+    // ============================================================
+    // ARRANQUE
+    // ============================================================
+    function pintarTodo(aviso) {
+      if (aviso) ultimoAviso = aviso;
+      pintarLicencia();
+      pintarLeyenda();
+      pintarTablas();
+      pintarNotificacion();
+      if (mapa) dibujarUnidades();
+      if (ficha) pintarFicha();
+    }
+
+    // Revisa los desvíos del día y avisa si alguno terminó (4.4.3)
+    function revisarDesvios() {
+      const finalizados = sincronizarDesvios();
+      return finalizados.length
+        ? `📲 Desvío ${finalizados.map(r => `«${esc(r.nombre)}»`).join(", ")} finalizado: tiempos normales restablecidos (aviso enviado al celular de los choferes).`
+        : "";
+    }
+
+    // Cambios en la Configuración o en la Asistencia (otra pestaña) se reflejan al instante
+    window.addEventListener("storage", e => {
+      if (e.key === CLAVE_JORNADA) cargarJornada();
+      else if (e.key === null || e.key.startsWith("config_")) {
+        cargarConfiguracion();
+        if (!cfg.ruta) { if (mapa) { mapa.remove(); mapa = null; } montarMapa(); }
+        else if (!mapa) montarMapa();
+        else dibujarRuta();
+      }
+      else return;
+      pintarTodo(revisarDesvios());
+    });
+
+    // Los íconos avanzan solos sobre la pista
+    setInterval(dibujarUnidades, 15000);
+
+    document.getElementById("btnMenu").onclick = () => document.getElementById("menu").classList.toggle("abierto");
+
+    cargarConfiguracion();
+    cargarJornada();
+    montarMapa();
+    pintarTodo(revisarDesvios());
+  </script>
+</body>
+</html>
