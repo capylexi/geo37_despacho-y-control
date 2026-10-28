@@ -1,0 +1,2836 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Módulo de Configuración</title>
+  <style>
+    :root {
+      --primario: #1f6feb;
+      --primario-suave: #e8f0fe;
+      --fondo: #f4f6f9;
+      --superficie: #ffffff;
+      --borde: #dde2ea;
+      --texto: #1c2430;
+      --texto-suave: #5f6b7a;
+      --ancho-menu: 250px;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: "Segoe UI", system-ui, sans-serif;
+      font-size: 14px;
+      background: var(--fondo);
+      color: var(--texto);
+    }
+
+    /* ---------- Encabezado ---------- */
+    .encabezado {
+      height: 56px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 0 16px;
+      background: var(--superficie);
+      border-bottom: 1px solid var(--borde);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+    /* Pestañas de módulos: cada módulo es su propio archivo HTML */
+    .pestanas { display: flex; gap: 4px; height: 100%; overflow-x: auto; }
+    .pestanas a {
+      display: flex;
+      align-items: center;
+      padding: 0 14px;
+      border-bottom: 3px solid transparent;
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--texto-suave);
+      text-decoration: none;
+      white-space: nowrap;
+    }
+    .pestanas a.activo { color: var(--primario); border-bottom-color: var(--primario); }
+    .btn-menu {
+      display: none;
+      border: 1px solid var(--borde);
+      background: none;
+      border-radius: 6px;
+      padding: 6px 10px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+
+    /* ---------- Estructura ---------- */
+    .contenedor { display: flex; min-height: calc(100vh - 56px); }
+
+    /* ---------- Menú lateral de submódulos ---------- */
+    .menu {
+      width: var(--ancho-menu);
+      flex-shrink: 0;
+      background: var(--superficie);
+      border-right: 1px solid var(--borde);
+      padding: 16px 10px;
+    }
+    .menu-titulo {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      color: var(--texto-suave);
+      margin: 0 8px 8px;
+    }
+    .menu button {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 9px 10px;
+      border: none;
+      background: none;
+      border-radius: 6px;
+      font: inherit;
+      color: var(--texto);
+      text-align: left;
+      cursor: pointer;
+    }
+    .menu button:hover { background: var(--fondo); }
+    .menu button.activo {
+      background: var(--primario-suave);
+      color: var(--primario);
+      font-weight: 600;
+    }
+    .menu .icono { width: 20px; text-align: center; }
+
+    /* ---------- Contenido ---------- */
+    .contenido { flex: 1; padding: 24px; min-width: 0; }
+    .contenido h2 { margin: 0 0 4px; font-size: 20px; }
+    .contenido .descripcion { margin: 0 0 20px; color: var(--texto-suave); }
+
+    /* Área de cada submódulo */
+    .panel {
+      background: var(--superficie);
+      border: 1px solid var(--borde);
+      border-radius: 10px;
+      padding: 24px;
+    }
+    .marcador {
+      border: 2px dashed var(--borde);
+      border-radius: 8px;
+      padding: 40px 16px;
+      text-align: center;
+      color: var(--texto-suave);
+    }
+
+    .panel + .panel { margin-top: 16px; }
+    .panel h3 { margin: 0 0 4px; font-size: 16px; }
+    .panel .descripcion { margin-bottom: 18px; }
+
+    /* ---------- Formularios ---------- */
+    .campos {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 16px 20px;
+    }
+    .campo label { display: block; font-weight: 600; margin-bottom: 4px; }
+    .campo .obligatorio { color: #d1242f; }
+    .campo input {
+      width: 100%;
+      padding: 9px 11px;
+      border: 1px solid var(--borde);
+      border-radius: 6px;
+      font: inherit;
+      color: var(--texto);
+      background: var(--superficie);
+    }
+    .campo input:focus { outline: 2px solid var(--primario-suave); border-color: var(--primario); }
+    .campo.con-error input { border-color: #d1242f; }
+    .campo .ayuda { margin: 4px 0 0; font-size: 12px; color: var(--texto-suave); }
+    .campo .error { margin: 4px 0 0; font-size: 12px; color: #d1242f; }
+    .con-prefijo { display: flex; }
+    .con-prefijo span {
+      padding: 9px 10px;
+      border: 1px solid var(--borde);
+      border-right: none;
+      border-radius: 6px 0 0 6px;
+      background: var(--fondo);
+      color: var(--texto-suave);
+    }
+    .con-prefijo input { border-radius: 0 6px 6px 0; }
+
+    .acciones { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; flex-wrap: wrap; }
+    .btn {
+      padding: 9px 18px;
+      border-radius: 6px;
+      border: 1px solid var(--borde);
+      background: var(--superficie);
+      font: inherit;
+      cursor: pointer;
+    }
+    .btn-primario { background: var(--primario); border-color: var(--primario); color: #fff; font-weight: 600; }
+    .aviso {
+      margin-top: 14px;
+      padding: 10px 12px;
+      border-radius: 6px;
+      background: #e6f4ea;
+      color: #1a7f37;
+    }
+
+    .btn:disabled { opacity: .5; cursor: not-allowed; }
+    .btn-ok { background: #1a7f37; border-color: #1a7f37; color: #fff; font-weight: 600; }
+    .btn-no { background: #d1242f; border-color: #d1242f; color: #fff; font-weight: 600; }
+    .texto-error { color: #d1242f; }
+
+    /* ---------- Trazado de ruta ---------- */
+    .barra-ruta {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 12px;
+    }
+    .barra-ruta .instruccion { margin: 0; flex: 1 1 280px; }
+    .barra-ruta .acciones { margin: 0; }
+    .selector-mapa { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
+    .selector-mapa label { font-weight: 600; }
+    .selector-mapa select {
+      padding: 7px 10px;
+      border: 1px solid var(--borde);
+      border-radius: 6px;
+      font: inherit;
+      background: var(--superficie);
+      max-width: 100%;
+    }
+    .punto-osm {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 2px solid #fff;
+      border-radius: 50%;
+      color: #fff;
+      font: 700 11px/1 "Segoe UI", system-ui, sans-serif;
+      box-shadow: 0 1px 4px rgba(0,0,0,.35);
+    }
+    #mapa {
+      height: 60vh;
+      min-height: 340px;
+      border: 1px solid var(--borde);
+      border-radius: 8px;
+      background: var(--fondo);
+    }
+    #mapa .marcador { height: 100%; display: flex; align-items: center; justify-content: center; flex-direction: column; }
+    .centrado { justify-content: center; }
+
+    /* ---------- Desvíos de ruta ---------- */
+    .desvio-lista { display: flex; flex-direction: column; gap: 8px; margin-bottom: 14px; }
+    .desvio-fila {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      padding: 8px 10px;
+      border: 1px solid var(--borde);
+      border-radius: 8px;
+    }
+    .desvio-fila.activo { border-color: #a7dbb5; background: #e6f4ea; }
+    .desvio-info {
+      flex: 1 1 220px;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      padding: 0;
+      border: none;
+      background: none;
+      font: inherit;
+      color: inherit;
+      text-align: left;
+      cursor: pointer;
+    }
+    .desvio-info span { font-size: 12px; color: var(--texto-suave); }
+    .btn-eliminar { padding: 6px 12px; color: #d1242f; font-weight: 700; }
+    .confirmar { display: flex; align-items: center; gap: 6px; font-size: 13px; }
+    .confirmar .btn { padding: 6px 12px; }
+    .form-desvio {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 16px 20px;
+      margin-bottom: 14px;
+    }
+    .form-desvio .texto-error, .form-desvio .reglas { grid-column: 1 / -1; margin: 0; }
+    .calendario { max-width: 340px; }
+    .cal-cabecera { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+    .cal-cabecera .btn { padding: 4px 12px; }
+    .cal-grilla { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+    .cal-grilla button {
+      aspect-ratio: 1;
+      padding: 0;
+      border: 1px solid var(--borde);
+      border-radius: 6px;
+      background: var(--superficie);
+      font: inherit;
+      cursor: pointer;
+    }
+    .cal-grilla .cal-semana {
+      aspect-ratio: auto;
+      padding: 4px 0;
+      border: none;
+      background: none;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--primario);
+    }
+    .cal-grilla .dia.hoy { border-color: var(--primario); }
+    .cal-grilla .dia.elegido { background: #1a7f37; border-color: #1a7f37; color: #fff; font-weight: 600; }
+    .cal-grilla .dia:disabled { opacity: .35; cursor: not-allowed; }
+    .reglas {
+      padding: 12px 14px;
+      border: 1px solid var(--borde);
+      border-radius: 8px;
+      background: var(--fondo);
+      font-size: 13px;
+    }
+    .reglas ul { margin: 6px 0 0; padding-left: 18px; }
+    .reglas li + li { margin-top: 4px; }
+
+    /* ---------- Puntos de control y tiempos de tramo ---------- */
+    .barra-sentido {
+      position: sticky;
+      top: 56px;
+      z-index: 5;
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 12px;
+      padding: 8px 0;
+      background: var(--superficie);
+    }
+    .barra-sentido .btn { flex: 1 1 200px; font-weight: 600; }
+    .parpadeo { animation: parpadeo 1s steps(1, end) infinite; }
+    @keyframes parpadeo { 50% { opacity: .15; } }
+    .tramos { margin-top: 16px; }
+    .tramos ul { margin: 8px 0; padding: 0; list-style: none; }
+    .tramos li {
+      display: flex;
+      justify-content: space-between;
+      gap: 4px 16px;
+      flex-wrap: wrap;
+      padding: 7px 0;
+      border-bottom: 1px solid var(--borde);
+    }
+    .tramos li.ok span:last-child { color: #1a7f37; font-weight: 600; }
+    .tramos li.falta span:last-child { color: #b35c00; font-weight: 600; }
+    .campos-ventanilla { display: grid; gap: 12px; margin-top: 14px; }
+    .fila-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .btn-conmutar { width: 100%; margin-top: 14px; border-style: dashed; color: var(--primario); font-weight: 600; }
+    .modal .texto-error { margin-top: 10px; color: #d1242f; }
+
+    /* ---------- Franjas horarias y tolerancia ---------- */
+    .tarjeta-tolerancia { display: flex; align-items: center; justify-content: space-between; gap: 12px 20px; flex-wrap: wrap; }
+    .tarjeta-tolerancia h3 { font-size: 18px; }
+    .tarjeta-tolerancia .ayuda { margin: 4px 0 0; }
+    .selector-numero { display: flex; align-items: center; gap: 8px; }
+    .selector-numero .btn { width: 44px; height: 44px; padding: 0; font-size: 20px; font-weight: 700; }
+    .selector-numero span { font-size: 12px; color: var(--texto-suave); }
+    .estado-hora { display: inline-block; padding: 3px 10px; border-radius: 999px; background: var(--fondo); font-size: 12px; font-weight: 600; }
+    .estado-hora.punta { background: #fff4d6; color: #8a5a00; }
+    .franjas { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px; margin-top: 14px; }
+    .franja { display: flex; flex-direction: column; gap: 10px; padding: 14px; border: 1px solid var(--borde); border-radius: 10px; }
+    .franja.inactiva { background: var(--fondo); }
+    .franja.inactiva .franja-info { opacity: .6; }
+    .franja-info { display: flex; flex-direction: column; gap: 4px; }
+    .franja-info .ayuda { margin: 0; font-size: 12px; color: var(--texto-suave); }
+    .franja-pie { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+    .franja-pie .btn { padding: 6px 12px; }
+    .selector-hora { display: flex; align-items: center; gap: 4px; }
+    .selector-hora select {
+      flex: 1;
+      min-width: 0;
+      padding: 9px 6px;
+      border: 1px solid var(--borde);
+      border-radius: 6px;
+      background: var(--superficie);
+      font: inherit;
+      color: var(--texto);
+    }
+    .chips { display: flex; gap: 4px; flex-wrap: wrap; }
+    .chip {
+      min-width: 28px;
+      padding: 3px 6px;
+      border: 1px solid var(--borde);
+      border-radius: 6px;
+      background: var(--superficie);
+      font: inherit;
+      font-size: 12px;
+      text-align: center;
+      color: var(--texto-suave);
+    }
+    button.chip { min-width: 38px; padding: 7px 6px; cursor: pointer; }
+    .chip.on { background: var(--primario); border-color: var(--primario); color: #fff; font-weight: 600; }
+    .switch { display: flex; align-items: center; gap: 6px; font-size: 13px; cursor: pointer; }
+    .switch input { width: 18px; height: 18px; accent-color: #1a7f37; }
+
+    /* ---------- Personal de la empresa (conductores y flota) ---------- */
+    .lista-flota { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; }
+    .fila-flota {
+      display: flex;
+      align-items: center;
+      gap: 8px 10px;
+      flex-wrap: wrap;
+      padding: 10px 12px;
+      border: 1px solid var(--borde);
+      border-radius: 8px;
+    }
+    .fila-flota.deshabilitado { background: var(--fondo); }
+    .fila-flota.deshabilitado .flota-info { opacity: .55; }
+    .flota-info {
+      flex: 1 1 220px;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      padding: 0;
+      border: none;
+      background: none;
+      font: inherit;
+      color: inherit;
+      text-align: left;
+    }
+    button.flota-info { cursor: pointer; }
+    .flota-info span { font-size: 12px; color: var(--texto-suave); }
+    .fila-flota .texto-error { flex-basis: 100%; margin: 0; font-size: 12px; }
+    .switch.habilitado { color: #1a7f37; font-weight: 600; }
+    .simulador { margin-top: 16px; }
+    .simulador summary { cursor: pointer; font-size: 13px; color: var(--texto-suave); }
+    .simulador form { margin-top: 12px; }
+    .qr-caja { display: flex; justify-content: center; margin: 16px 0 8px; }
+    .codigo-empresa { text-align: center; font-family: Consolas, monospace; font-size: 15px; font-weight: 700; letter-spacing: .05em; }
+    .cerrar-x {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      width: 32px;
+      height: 32px;
+      border: 1px solid var(--borde);
+      border-radius: 6px;
+      background: var(--superficie);
+      font-size: 16px;
+      cursor: pointer;
+    }
+    .modal .con-cerrar { padding-right: 40px; }
+    .datos-conductor { display: grid; grid-template-columns: auto 1fr; gap: 8px 16px; margin: 16px 0 0; }
+    .datos-conductor dt { color: var(--texto-suave); }
+    .datos-conductor dd { margin: 0; font-weight: 600; }
+
+    /* ---------- Fichas en modo lectura / edición ---------- */
+    .campo input:disabled { background: var(--fondo); color: var(--texto); cursor: default; }
+    .ficha-cabecera { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+    .ficha-cabecera .btn { padding: 7px 14px; }
+
+    /* ---------- Barra de licencia ---------- */
+    .barra-licencia {
+      display: flex;
+      align-items: center;
+      gap: 8px 16px;
+      flex-wrap: wrap;
+      padding: 8px 16px;
+      background: var(--superficie);
+      border-bottom: 1px solid var(--borde);
+      font-size: 13px;
+    }
+    .insignia { padding: 3px 10px; border-radius: 999px; font-size: 12px; font-weight: 600; }
+    .insignia.al-dia { background: #e6f4ea; color: #1a7f37; }
+    .insignia.gracia { background: #fff4d6; color: #8a5a00; }
+    .insignia.vencida { background: #fde7e9; color: #b4232c; }
+    .alerta-licencia { flex-basis: 100%; padding: 8px 10px; border-radius: 6px; background: #fff4d6; color: #5c4400; }
+    .alerta-licencia.vencida { background: #fde7e9; color: #7a1a20; }
+    .prueba-licencia { margin-left: auto; font-size: 12px; color: var(--texto-suave); }
+    .prueba-licencia summary { cursor: pointer; }
+    .campos-prueba { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 6px; }
+    .campos-prueba input { width: auto; padding: 4px 6px; border: 1px solid var(--borde); border-radius: 4px; font: inherit; }
+
+    /* ---------- Ventana de aviso ---------- */
+    .modal-fondo {
+      position: fixed;
+      inset: 0;
+      z-index: 2000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      background: rgba(0,0,0,.4);
+    }
+    .modal {
+      position: relative;
+      width: 100%;
+      max-width: 460px;
+      padding: 20px;
+      border-radius: 10px;
+      background: var(--superficie);
+      box-shadow: 0 10px 30px rgba(0,0,0,.2);
+    }
+    .modal h3 { margin: 0 0 8px; font-size: 16px; }
+    .modal p { margin: 0; color: var(--texto-suave); }
+    .modal .ayuda { margin-top: 12px; font-size: 12px; }
+
+    /* ---------- Celular ---------- */
+    @media (max-width: 768px) {
+      .btn-menu { display: inline-block; }
+      .menu {
+        position: fixed;
+        top: 56px;
+        bottom: 0;
+        left: 0;
+        z-index: 9;
+        transform: translateX(-100%);
+        transition: transform .2s;
+      }
+      .menu.abierto { transform: translateX(0); box-shadow: 4px 0 16px rgba(0,0,0,.1); }
+      .contenido { padding: 16px; }
+    }
+  </style>
+</head>
+<body>
+
+  <header class="encabezado">
+    <button class="btn-menu" id="btnMenu" aria-label="Abrir menú">☰</button>
+    <nav class="pestanas">
+      <a class="activo" href="MOD_CONFIGURACION.html">⚙️ Configuración</a>
+      <a href="MOD_ASISTENCIA.html" onclick="return salirA(this.href)">📋 Asistencia y Saque</a>
+      <a href="MOD_MONITOREO.html" onclick="return salirA(this.href)">📡 Ruta y Monitoreo</a>
+    </nav>
+  </header>
+
+  <div class="barra-licencia" id="barraLicencia"></div>
+
+  <div class="contenedor">
+    <nav class="menu" id="menu">
+      <p class="menu-titulo">Submódulos</p>
+      <div id="listaMenu"></div>
+    </nav>
+
+    <main class="contenido" id="contenido"></main>
+  </div>
+
+  <div id="modal"></div>
+
+  <script>
+    // ============================================================
+    // LISTA DE SUBMÓDULOS
+    // Para agregar, quitar o renombrar un submódulo, edita solo esta lista.
+    // ============================================================
+    // "vista" dibuja el contenido, "activar" lo prepara una vez en pantalla y
+    // "pendiente" dice si hay cambios sin guardar (para proteger la salida accidental).
+    const submodulos = [
+      {
+        id: "empresa",
+        icono: "🏢",
+        nombre: "Empresa y Personal a Cargo",
+        descripcion: "Despacho y Control: identidad de la empresa y responsables.",
+        vista: vistaEmpresa,
+        activar: activarEmpresa,
+        pendiente: pendienteEmpresa
+      },
+      {
+        id: "ruta",
+        icono: "🗺️",
+        nombre: "Trazado de Ruta",
+        descripcion: "Ruta Oficial: trazado asistido por giros en modo vehicular.",
+        vista: vistaRuta,
+        activar: activarRuta,
+        pendiente: pendienteRuta
+      },
+      {
+        id: "desvios",
+        icono: "🚧",
+        nombre: "Desvíos de Ruta",
+        descripcion: "Variantes temporales por calendario: ferias, procesiones u obras municipales.",
+        vista: vistaDesvios,
+        activar: activarDesvios,
+        pendiente: pendienteDesvios
+      },
+      {
+        id: "controles",
+        icono: "📍",
+        nombre: "Puntos de Control y Tiempos",
+        descripcion: "Parametrización Base A ↔ Base B: puntos de control y minutos por tramo.",
+        vista: vistaControles,
+        activar: activarControles
+      },
+      {
+        id: "horarios",
+        icono: "⏱️",
+        nombre: "Franjas Horarias y Tolerancia",
+        descripcion: "Horas punta y margen de gracia de puntualidad.",
+        vista: vistaHorarios,
+        activar: pintarHorarios
+      },
+      {
+        id: "flota",
+        icono: "🚌",
+        nombre: "Personal de la Empresa",
+        descripcion: "Conductores y flota: vinculación por QR, solicitudes de ingreso y padrón oficial.",
+        vista: vistaFlota,
+        activar: activarFlota,
+        pendiente: pendienteFlota
+      }
+    ];
+
+    const listaMenu = document.getElementById("listaMenu");
+    const contenido = document.getElementById("contenido");
+    const menu = document.getElementById("menu");
+
+    // Construye el menú lateral
+    function pintarMenu(activo) {
+      listaMenu.innerHTML = submodulos.map(s => `
+        <button class="${s.id === activo ? "activo" : ""}" onclick="abrir('${s.id}')">
+          <span class="icono">${s.icono}</span>${s.nombre}
+        </button>
+      `).join("");
+    }
+
+    // Vista de un submódulo
+    function vistaSubmodulo(s) {
+      return `
+        <h2>${s.icono} ${s.nombre}</h2>
+        <p class="descripcion">${s.descripcion}</p>
+        ${s.vista()}
+      `;
+    }
+
+    // ============================================================
+    // CABECERA: ESTADO DEL SERVICIO Y FECHA DE VENCIMIENTO
+    // En el APK estos datos vendrán del servidor de cobranza; aquí se simulan ("Modo prueba").
+    // ============================================================
+    const CLAVE_LICENCIA = "config_licencia";
+    const DIAS_GRACIA = 3; // tolerancia sin bloquear la salida de los carros
+
+    // cupo = cantidad de vehículos que permite la licencia contratada (lo usa el Submódulo 6)
+    function leerLicencia() {
+      const defecto = { activacion: hoyISO(), mesesPagados: 1, cupo: 10 };
+      try { return { ...defecto, ...JSON.parse(localStorage.getItem(CLAVE_LICENCIA)) }; } catch (e) { return defecto; }
+    }
+
+    // Ciclo de fecha fija: vence el mismo día de corte cada mes. Si ese mes no tiene ese día
+    // (31 en un mes de 30, o febrero), vence el último día del mes (28 o 29 si es bisiesto).
+    function sumarMeses(iso, meses) {
+      const [a, m, d] = iso.split("-").map(Number);
+      const ultimoDia = new Date(a, m - 1 + meses + 1, 0).getDate();
+      return new Date(a, m - 1 + meses, Math.min(d, ultimoDia));
+    }
+
+    function fechaLarga(fecha) {
+      return `${fecha.getDate()} de ${MESES[fecha.getMonth()]} de ${fecha.getFullYear()}`;
+    }
+
+    function estadoLicencia() {
+      const l = leerLicencia();
+      const vence = sumarMeses(l.activacion, l.mesesPagados);
+      const hoy = new Date();
+      hoy.setHours(0, 0, 0, 0);
+      const diasVencido = Math.round((hoy - vence) / 86400000);
+      const finGracia = new Date(vence);
+      finGracia.setDate(finGracia.getDate() + DIAS_GRACIA);
+      const estado = diasVencido <= 0 ? "al-dia" : diasVencido <= DIAS_GRACIA ? "gracia" : "vencida";
+      return { l, vence, finGracia, estado, diasRestantes: DIAS_GRACIA - diasVencido };
+    }
+
+    function pintarLicencia(pruebaAbierta) {
+      const e = estadoLicencia();
+      const insignias = {
+        "al-dia": "Licencia Activa / Al Día",
+        gracia: "Pago Pendiente - Período de Gracia",
+        vencida: "Licencia Vencida"
+      };
+      const alertas = {
+        gracia: `⚠ El plazo venció y el pago aún no se registra. La salida de los carros <strong>no se bloquea</strong>: quedan ${e.diasRestantes} día(s) de tolerancia (hasta el ${fechaLarga(e.finGracia)}) para regularizar el abono.`,
+        vencida: `⛔ El período de gracia terminó el ${fechaLarga(e.finGracia)}. Regulariza el pago para reactivar el servicio.`
+      };
+      document.getElementById("barraLicencia").innerHTML = `
+        <span class="insignia ${e.estado}">${insignias[e.estado]}</span>
+        <span>Vence: <strong>${fechaLarga(e.vence)}</strong></span>
+        <details class="prueba-licencia" ${pruebaAbierta ? "open" : ""}>
+          <summary>🔧 Modo prueba</summary>
+          <div class="campos-prueba">
+            <label>Activación <input type="date" value="${e.l.activacion}" onchange="probarLicencia('activacion', this.value)"></label>
+            <label>Meses pagados <input type="number" min="0" max="120" value="${e.l.mesesPagados}" onchange="probarLicencia('mesesPagados', Number(this.value))"></label>
+            <label>Cupo de vehículos <input type="number" min="1" max="500" value="${e.l.cupo}" onchange="probarLicencia('cupo', Number(this.value))"></label>
+          </div>
+        </details>
+        ${alertas[e.estado] ? `<div class="alerta-licencia ${e.estado}">${alertas[e.estado]}</div>` : ""}
+      `;
+    }
+
+    function probarLicencia(campo, valor) {
+      if (campo === "activacion" && !valor) return;
+      const l = leerLicencia();
+      l[campo] = valor;
+      try { localStorage.setItem(CLAVE_LICENCIA, JSON.stringify(l)); } catch (e) {}
+      pintarLicencia(true);
+      pintarFlota(); // el cupo se muestra en el Submódulo 6
+    }
+
+    // ============================================================
+    // PROTECCIÓN CONTRA SALIDA ACCIDENTAL
+    // ============================================================
+    function mostrarModal(html, alElegir) {
+      const caja = document.getElementById("modal");
+      caja.innerHTML = `<div class="modal-fondo"><div class="modal" role="dialog" aria-modal="true">${html}</div></div>`;
+      caja.querySelectorAll("[data-accion]").forEach(b => b.onclick = () => {
+        caja.innerHTML = "";
+        alElegir(b.dataset.accion);
+      });
+    }
+
+    // pendiente = { guardar (o null si aún no se puede), descartar, nota }
+    function preguntarSalida(pendiente, continuar) {
+      mostrarModal(`
+        <h3>Tienes cambios sin guardar.</h3>
+        <p>¿Deseas guardar y salir, descartar los cambios o seguir editando?</p>
+        <div class="acciones">
+          ${pendiente.guardar ? `<button class="btn btn-ok" data-accion="guardar">Guardar y Salir</button>` : ""}
+          <button class="btn btn-no" data-accion="descartar">Descartar Cambios</button>
+          <button class="btn" data-accion="seguir">Seguir Editando</button>
+        </div>
+        ${pendiente.nota ? `<p class="ayuda">${pendiente.nota}</p>` : ""}
+      `, accion => {
+        if (accion === "descartar") { pendiente.descartar(); continuar(); }
+        else if (accion === "guardar" && pendiente.guardar()) continuar();
+      });
+    }
+
+    // ============================================================
+    // SUBMÓDULO 1: EMPRESA Y PERSONAL A CARGO (DESPACHO Y CONTROL)
+    // Cada ficha se muestra en modo lectura; [ ✏ Editar Datos ] habilita sus campos.
+    // ============================================================
+    const CLAVE_EMPRESA = "config_empresa";
+    const CLAVE_PERSONAL = "config_personal";
+
+    // Reglas compartidas con el formulario de conductores del Submódulo 6
+    const celularValido = x => !x ? "El celular es obligatorio."
+      : !/^9\d{8}$/.test(x) ? "Debe tener 9 dígitos y empezar con 9." : "";
+    const nombreValido = x => !x ? "El nombre es obligatorio."
+      : x.split(/\s+/).length < 2 ? "Escribe el nombre y los apellidos." : "";
+    const dniValido = x => !x ? "El DNI es obligatorio." : !/^\d{8}$/.test(x) ? "Debe tener exactamente 8 dígitos." : "";
+
+    const FICHAS = [
+      {
+        id: "empresa",
+        clave: CLAVE_EMPRESA,
+        titulo: "Ficha de Identidad Institucional",
+        descripcion: "Datos legales de la empresa para la facturación formal B2B ante SUNAT.",
+        aviso: "✔ Datos de la empresa guardados.",
+        campos: [
+          {
+            nombre: "ruc", etiqueta: "RUC", placeholder: "20123456789", largo: 11, numerico: true,
+            ayuda: "11 dígitos numéricos.",
+            regla: x => !x ? "El RUC es obligatorio."
+              : !/^\d{11}$/.test(x) ? "Debe tener exactamente 11 dígitos numéricos."
+              : !rucValido(x) ? "El RUC no es válido. Revisa los dígitos." : ""
+          },
+          {
+            nombre: "razonSocial", etiqueta: "Razón Social", placeholder: "EMPRESA DE TRANSPORTES S.A.C.", mayusculas: true,
+            ayuda: "Nombre legal exacto, tal como figura en la Ficha RUC.",
+            regla: x => !x ? "La razón social es obligatoria." : ""
+          },
+          {
+            nombre: "correoFacturacion", etiqueta: "Correo de Facturación Electrónica", placeholder: "facturacion@empresa.com", tipo: "email",
+            ayuda: "Aquí se enviará el XML y PDF de la factura mensual del software.",
+            regla: x => !x ? "El correo es obligatorio."
+              : !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(x) ? "Escribe un correo válido." : ""
+          },
+          {
+            nombre: "celular", etiqueta: "Celular de Contacto", placeholder: "987654321", prefijo: "+51", largo: 9, numerico: true,
+            ayuda: "Presidente o gerente, para cobranza y soporte.",
+            regla: celularValido
+          }
+        ]
+      },
+      {
+        id: "personal",
+        clave: CLAVE_PERSONAL,
+        titulo: "Ficha del Personal a Cargo (Controlador Único de Base)",
+        descripcion: "Responsable de despacho y control en la base.",
+        aviso: "✔ Datos del personal a cargo guardados.",
+        campos: [
+          {
+            nombre: "nombreCompleto", etiqueta: "Nombre y Apellidos", placeholder: "Juan Pérez Quispe",
+            ayuda: "Nombre y apellidos completos.",
+            regla: nombreValido
+          },
+          {
+            nombre: "dni", etiqueta: "DNI", placeholder: "12345678", largo: 8, numerico: true,
+            ayuda: "8 dígitos, para identificación legal y firma en planilla.",
+            regla: dniValido
+          },
+          {
+            nombre: "celular", etiqueta: "Celular personal", placeholder: "987654321", prefijo: "+51", largo: 9, numerico: true,
+            regla: celularValido
+          }
+        ]
+      }
+    ];
+
+    const editando = {}; // id de ficha → true mientras está en modo edición
+    const fichaPorId = id => FICHAS.find(f => f.id === id);
+
+    function leerFicha(f) {
+      try { return JSON.parse(localStorage.getItem(f.clave)); } catch (e) { return null; }
+    }
+
+    function vistaEmpresa() {
+      // Una ficha que nunca se llenó se abre directamente en modo edición
+      FICHAS.forEach(f => { if (editando[f.id] === undefined) editando[f.id] = !leerFicha(f); });
+      return FICHAS.map(fichaHTML).join("");
+    }
+
+    // ---------- Campos de formulario (también los usa el Submódulo 6) ----------
+    function campoHTML(prefijo, c, valor, activo) {
+      const input = `<input id="${prefijo}-${c.nombre}" name="${c.nombre}" placeholder="${c.placeholder}" value="${esc(valor)}"
+        ${c.tipo ? `type="${c.tipo}"` : ""} ${c.numerico ? `inputmode="numeric"` : ""} ${c.largo ? `maxlength="${c.largo}"` : ""} ${activo ? "" : "disabled"}>`;
+      return `
+        <div class="campo">
+          <label for="${prefijo}-${c.nombre}">${c.etiqueta} <span class="obligatorio">*</span></label>
+          ${c.prefijo ? `<div class="con-prefijo"><span>${c.prefijo}</span>${input}</div>` : input}
+          ${c.ayuda ? `<p class="ayuda">${c.ayuda}</p>` : ""}
+        </div>
+      `;
+    }
+
+    // Solo números donde corresponde y mayúsculas donde se pide
+    function prepararCampos(form, campos) {
+      campos.forEach(c => {
+        const input = form.elements[c.nombre];
+        if (c.numerico) input.addEventListener("input", () => { input.value = input.value.replace(/\D/g, ""); });
+        if (c.mayusculas) input.addEventListener("input", () => { input.value = input.value.toUpperCase(); });
+      });
+    }
+
+    // Valida los campos y devuelve sus valores, o null si alguno tiene error
+    function leerCampos(form, campos) {
+      const datos = {};
+      let valido = true;
+      campos.forEach(c => {
+        datos[c.nombre] = form.elements[c.nombre].value.trim();
+        const mensaje = c.regla(datos[c.nombre]);
+        mostrarError(form.elements[c.nombre], mensaje);
+        if (mensaje) valido = false;
+      });
+      return valido ? datos : null;
+    }
+
+    function fichaHTML(f) {
+      const d = leerFicha(f) || {}, activa = editando[f.id];
+      const campos = f.campos.map(c => campoHTML(f.id, c, d[c.nombre] || "", activa)).join("");
+      return `
+        <form class="panel" id="ficha-${f.id}" novalidate onsubmit="event.preventDefault(); guardarFicha('${f.id}')">
+          <div class="ficha-cabecera">
+            <div>
+              <h3>${f.titulo}</h3>
+              <p class="descripcion">${f.descripcion}</p>
+            </div>
+            ${activa ? "" : `<button type="button" class="btn" onclick="editarFicha('${f.id}')">✏ Editar Datos</button>`}
+          </div>
+          <div class="campos">${campos}</div>
+          ${activa ? `
+            <div class="acciones">
+              <button type="button" class="btn btn-no" onclick="cancelarFicha('${f.id}')">✗ Cancelar</button>
+              <button type="submit" class="btn btn-ok">✓ Guardar Cambios</button>
+            </div>` : ""}
+          <div class="aviso-ficha"></div>
+        </form>
+      `;
+    }
+
+    function prepararFicha(f) {
+      prepararCampos(document.getElementById("ficha-" + f.id), f.campos);
+    }
+
+    function pintarFicha(f, aviso) {
+      document.getElementById("ficha-" + f.id).outerHTML = fichaHTML(f);
+      prepararFicha(f);
+      if (aviso) document.querySelector(`#ficha-${f.id} .aviso-ficha`).innerHTML = `<div class="aviso">${aviso}</div>`;
+    }
+
+    function activarEmpresa() {
+      FICHAS.forEach(prepararFicha);
+    }
+
+    function editarFicha(id) {
+      editando[id] = true;
+      pintarFicha(fichaPorId(id));
+    }
+
+    function cancelarFicha(id) {
+      editando[id] = false;
+      pintarFicha(fichaPorId(id));
+    }
+
+    // Valida y guarda la ficha; devuelve true si se guardó
+    function guardarFicha(id) {
+      const f = fichaPorId(id), datos = leerCampos(document.getElementById("ficha-" + id), f.campos);
+      if (!datos) return false;
+      try { localStorage.setItem(f.clave, JSON.stringify(datos)); } catch (e) {}
+      editando[id] = false;
+      pintarFicha(f, f.aviso);
+      return true;
+    }
+
+    function fichaConCambios(f) {
+      const form = document.getElementById("ficha-" + f.id);
+      if (!editando[f.id] || !form) return false;
+      const d = leerFicha(f) || {};
+      return f.campos.some(c => form.elements[c.nombre].value.trim() !== (d[c.nombre] || ""));
+    }
+
+    function pendienteEmpresa() {
+      const conCambios = FICHAS.filter(fichaConCambios);
+      if (!conCambios.length) return null;
+      return {
+        guardar: () => conCambios.every(f => guardarFicha(f.id)),
+        descartar: () => conCambios.forEach(f => { editando[f.id] = false; })
+      };
+    }
+
+    // Valida el RUC con el dígito verificador de SUNAT
+    function rucValido(ruc) {
+      if (!/^(10|15|16|17|20)\d{9}$/.test(ruc)) return false;
+      const pesos = [5, 4, 3, 2, 7, 6, 5, 4, 3, 2];
+      const suma = pesos.reduce((t, p, i) => t + p * Number(ruc[i]), 0);
+      const digito = (11 - (suma % 11)) % 10;
+      return digito === Number(ruc[10]);
+    }
+
+    function mostrarError(input, mensaje) {
+      const caja = input.closest(".campo");
+      caja.classList.toggle("con-error", !!mensaje);
+      let p = caja.querySelector(".error");
+      if (!p) { p = document.createElement("p"); p.className = "error"; caja.appendChild(p); }
+      p.textContent = mensaje;
+      p.hidden = !mensaje;
+    }
+
+    // ============================================================
+    // SUBMÓDULO 2: TRAZADO DE RUTA (RUTA OFICIAL)
+    // Necesita una clave de Google con "Maps JavaScript API" y "Routes API" activadas.
+    // ============================================================
+    const GOOGLE_MAPS_API_KEY = ""; // ← pega aquí tu clave de Google Maps
+    const CLAVE_RUTA = "config_ruta_oficial";
+    const CENTRO_INICIAL = { lat: -12.0464, lng: -77.0428 }; // Lima
+    const RADIO_BASE = 50; // metros de radio de la Base A y la Base B
+    const COLOR_BASE = "#1c2430", COLOR_IDA = "#1f6feb", COLOR_REGRESO = "#e8590c", COLOR_GUIA = "#5f6b7a";
+
+    // Estado del trazado. paso 5 = ruta guardada.
+    // Los puntos viven solo en memoria: ponerlos o quitarlos no consulta ningún servicio ($0.00).
+    const ruta = { paso: 1, ida: [], regreso: [], caminoIda: null, caminoRegreso: null };
+    try {
+      const guardada = JSON.parse(localStorage.getItem(CLAVE_RUTA));
+      if (guardada) Object.assign(ruta, guardada, { paso: 5 });
+    } catch (e) {}
+
+    // Mapa en uso: "osm" (OpenStreetMap, gratis, para pruebas) o "google"
+    let proveedor = GOOGLE_MAPS_API_KEY ? "google" : "osm";
+    let mapa = null, capas = [], promesaMaps = null;
+    const scriptsCargados = {}; // librerías externas ya pedidas (Leaflet, QR)
+
+    // Carga una librería externa una sola vez (y su hoja de estilos, si tiene)
+    function cargarScript(src, css) {
+      if (!scriptsCargados[src]) scriptsCargados[src] = new Promise((listo, falla) => {
+        if (css && !document.querySelector(`link[href="${css}"]`)) {
+          const hoja = document.createElement("link");
+          hoja.rel = "stylesheet";
+          hoja.href = css;
+          document.head.appendChild(hoja);
+        }
+        const s = document.createElement("script");
+        s.src = src;
+        s.onload = listo;
+        s.onerror = () => { delete scriptsCargados[src]; s.remove(); falla(); };
+        document.head.appendChild(s);
+      });
+      return scriptsCargados[src];
+    }
+
+    function selectorMapa() {
+      return `
+        <div class="selector-mapa">
+          <label for="proveedorMapa">Mapa:</label>
+          <select id="proveedorMapa" onchange="cambiarProveedor(this.value)">
+            <option value="osm">OpenStreetMap (prueba gratis)</option>
+            <option value="google">Google Maps</option>
+          </select>
+        </div>
+      `;
+    }
+
+    function vistaRuta() {
+      return `
+        <section class="panel">
+          ${selectorMapa()}
+          <div class="barra-ruta">
+            <p class="instruccion" id="instruccionRuta"></p>
+            <div class="acciones" id="accionesRuta"></div>
+          </div>
+          <div id="mapa"></div>
+        </section>
+      `;
+    }
+
+    function avisoEnMapa(html) {
+      const div = document.getElementById("mapa");
+      if (div) div.innerHTML = `<div class="marcador">${html}</div>`;
+    }
+
+    // Cambiar de mapa vuelve a abrir el submódulo actual (los datos en memoria se conservan)
+    function cambiarProveedor(valor) {
+      proveedor = valor;
+      abrir(location.hash.slice(1));
+    }
+
+    // Crea el mapa del proveedor elegido dentro de #mapa y lo entrega a alListo
+    function montarMapa(centro, alTocar, alListo) {
+      // Se reemplaza el contenedor para que cada mapa empiece limpio
+      const div = document.createElement("div");
+      div.id = "mapa";
+      document.getElementById("mapa").replaceWith(div);
+      document.getElementById("proveedorMapa").value = proveedor;
+
+      const p = PROVEEDORES[proveedor];
+      const falta = p.falta && p.falta();
+      if (falta) { avisoEnMapa(falta); return; }
+      p.cargar().then(() => {
+        if (!div.isConnected) return; // el usuario cambió de mapa o de submódulo mientras cargaba
+        alListo(p.crear(div, centro, alTocar));
+      }).catch(() => avisoEnMapa("No se pudo cargar el mapa. Revisa tu conexión a internet."));
+    }
+
+    function activarRuta() {
+      mapa = null;
+      capas = [];
+      actualizarPanel();
+      montarMapa(ruta.ida[0] || CENTRO_INICIAL, tocarMapa, m => {
+        mapa = m;
+        dibujar();
+        if (ruta.caminoIda) encuadrar(ruta.caminoIda.concat(ruta.caminoRegreso || []));
+      });
+    }
+
+    // ------------------------------------------------------------
+    // Proveedores de mapa: los dos ofrecen las mismas funciones
+    // ------------------------------------------------------------
+    const PROVEEDORES = {
+      // OpenStreetMap + Leaflet + OSRM: gratis y sin clave, solo para pruebas
+      osm: {
+        cargar() {
+          return cargarScript(
+            "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js",
+            "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css"
+          );
+        },
+        crear(div, centro, alTocar) {
+          const m = L.map(div).setView(centro, 15);
+          L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+            maxZoom: 19,
+            attribution: "© OpenStreetMap"
+          }).addTo(m);
+          m.on("click", e => alTocar({ lat: e.latlng.lat, lng: e.latlng.lng }));
+          return {
+            marcador(p, etiqueta, color, alClic, grande) {
+              const t = grande ? 26 : 20;
+              const icono = L.divIcon({
+                className: "",
+                iconSize: [t, t],
+                iconAnchor: [t / 2, t / 2],
+                html: `<div class="punto-osm" style="width:${t}px;height:${t}px;background:${color}">${etiqueta}</div>`
+              });
+              const mk = L.marker(p, { icon: icono, interactive: !!alClic, zIndexOffset: grande ? 1000 : 0 }).addTo(m);
+              if (alClic) mk.on("click", alClic);
+              return () => mk.remove();
+            },
+            linea(camino, color, punteada, parpadeo) {
+              const l = L.polyline(camino, {
+                color,
+                weight: punteada ? 3 : 5,
+                opacity: 0.85,
+                dashArray: punteada ? "6 8" : null,
+                className: parpadeo ? "parpadeo" : "",
+                interactive: false
+              }).addTo(m);
+              return () => l.remove();
+            },
+            circulo(p, radio, color) {
+              const c = L.circle(p, { radius: radio, color, weight: 1, fillOpacity: 0.12, interactive: false }).addTo(m);
+              return () => c.remove();
+            },
+            encuadrar(camino) {
+              m.fitBounds(L.latLngBounds(camino), { padding: [40, 40] });
+            }
+          };
+        },
+        async trazar(grupo) {
+          const coords = grupo.map(p => `${p.lng},${p.lat}`).join(";");
+          const resp = await fetch(`https://router.project-osrm.org/route/v1/driving/${coords}?overview=full&geometries=geojson`);
+          const datos = await resp.json();
+          if (datos.code !== "Ok") throw new Error(datos.message || "No se encontró un camino entre esos puntos.");
+          return datos.routes[0].geometry.coordinates.map(([lng, lat]) => ({ lat, lng }));
+        }
+      },
+
+      // Google Maps (Maps JavaScript API + Routes API, modo vehicular)
+      google: {
+        falta: () => !GOOGLE_MAPS_API_KEY && `<strong>Falta la clave de Google Maps.</strong>
+          <p>Pégala en <code>GOOGLE_MAPS_API_KEY</code> dentro de este archivo, o elige OpenStreetMap para probar.</p>`,
+        cargar() {
+          if (window.google && google.maps) return Promise.resolve();
+          if (!promesaMaps) promesaMaps = new Promise((listo, falla) => {
+            window.alCargarMaps = listo;
+            window.gm_authFailure = () => avisoEnMapa(`<strong>La clave de Google Maps no es válida.</strong>
+              <p>Verifica que tenga activadas "Maps JavaScript API" y "Routes API".</p>`);
+            const s = document.createElement("script");
+            s.src = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_MAPS_API_KEY}&libraries=geometry&callback=alCargarMaps`;
+            s.async = true;
+            s.onerror = () => { promesaMaps = null; s.remove(); falla(); };
+            document.head.appendChild(s);
+          });
+          return promesaMaps;
+        },
+        crear(div, centro, alTocar) {
+          const m = new google.maps.Map(div, {
+            center: centro,
+            zoom: 15,
+            clickableIcons: false,
+            streetViewControl: false,
+            mapTypeControl: false,
+            gestureHandling: "greedy"
+          });
+          m.addListener("click", e => alTocar(e.latLng.toJSON()));
+          return {
+            marcador(p, etiqueta, color, alClic, grande) {
+              const mk = new google.maps.Marker({
+                position: p,
+                map: m,
+                label: { text: etiqueta, color: "#fff", fontSize: "11px", fontWeight: "700" },
+                icon: {
+                  path: google.maps.SymbolPath.CIRCLE,
+                  scale: grande ? 13 : 10,
+                  fillColor: color,
+                  fillOpacity: 1,
+                  strokeColor: "#fff",
+                  strokeWeight: 2
+                },
+                clickable: !!alClic,
+                zIndex: grande ? 2 : 1
+              });
+              if (alClic) mk.addListener("click", alClic);
+              return () => mk.setMap(null);
+            },
+            linea(camino, color, punteada, parpadeo) {
+              const opciones = { path: camino, map: m, clickable: false, strokeColor: color, strokeOpacity: 0.85, strokeWeight: 5 };
+              if (punteada) Object.assign(opciones, {
+                strokeOpacity: 0,
+                icons: [{ icon: { path: "M 0,-1 0,1", strokeOpacity: 0.8, scale: 2 }, offset: "0", repeat: "10px" }]
+              });
+              const l = new google.maps.Polyline(opciones);
+              let reloj = null;
+              if (parpadeo) {
+                let visible = true;
+                reloj = setInterval(() => { visible = !visible; l.setOptions({ strokeOpacity: visible ? 0.85 : 0.15 }); }, 500);
+              }
+              return () => { clearInterval(reloj); l.setMap(null); };
+            },
+            circulo(p, radio, color) {
+              const c = new google.maps.Circle({
+                center: p, radius: radio, map: m, clickable: false,
+                strokeColor: color, strokeWeight: 1, fillColor: color, fillOpacity: 0.12
+              });
+              return () => c.setMap(null);
+            },
+            encuadrar(camino) {
+              const limites = new google.maps.LatLngBounds();
+              camino.forEach(p => limites.extend(p));
+              m.fitBounds(limites, 40);
+            }
+          };
+        },
+        async trazar(grupo) {
+          const punto = p => ({ location: { latLng: { latitude: p.lat, longitude: p.lng } } });
+          const resp = await fetch("https://routes.googleapis.com/directions/v2:computeRoutes", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "X-Goog-Api-Key": GOOGLE_MAPS_API_KEY,
+              "X-Goog-FieldMask": "routes.polyline.encodedPolyline"
+            },
+            body: JSON.stringify({
+              origin: punto(grupo[0]),
+              destination: punto(grupo.at(-1)),
+              intermediates: grupo.slice(1, -1).map(punto),
+              travelMode: "DRIVE"
+            })
+          });
+          const datos = await resp.json();
+          if (!resp.ok) throw new Error((datos.error && datos.error.message) || resp.status);
+          if (!datos.routes || !datos.routes.length) throw new Error("Google no encontró un camino entre esos puntos.");
+          return google.maps.geometry.encoding.decodePath(datos.routes[0].polyline.encodedPolyline).map(p => p.toJSON());
+        }
+      }
+    };
+
+    // Un toque en la calzada coloca un punto (solo en los pasos de marcación o al editar)
+    function tocarMapa(p) {
+      if (ruta.edicion) { if (ruta.edicion.fase === "marcar") insertarPunto(p); return; }
+      if (ruta.paso === 1) ruta.ida.push(p);
+      else if (ruta.paso === 3) ruta.regreso.push(p);
+      else return;
+      dibujar();
+    }
+
+    // Tocar un punto ya colocado lo elimina sin alterar los demás
+    function quitarPunto(lista, i) {
+      lista.splice(i, 1);
+      dibujar();
+    }
+
+    function dibujar() {
+      actualizarPanel();
+      if (!mapa) return;
+      capas.forEach(quitar => quitar());
+      capas = [];
+
+      // Bases: círculo de 50 m de radio alrededor de la Base A y la Base B
+      if (ruta.ida.length) capas.push(mapa.circulo(ruta.ida[0], RADIO_BASE, COLOR_BASE));
+      if (ruta.ida.length > 1) capas.push(mapa.circulo(ruta.ida.at(-1), RADIO_BASE, COLOR_BASE));
+
+      // Al editar, los puntos del sentido elegido reaparecen; si no, solo se ven mientras se marca o revisa
+      const ed = ruta.edicion;
+      const editaSentido = s => ed && ed.sentido === s && ed.fase !== "sentido";
+      const tocaIda = ruta.paso === 1 || (editaSentido("ida") && ed.fase === "marcar");
+      const tocaRegreso = ruta.paso === 3 || (editaSentido("regreso") && ed.fase === "marcar");
+      const verPuntosIda = ruta.paso <= 2 || editaSentido("ida");
+      const verPuntosRegreso = ruta.paso === 3 || ruta.paso === 4 || editaSentido("regreso");
+
+      // Ida: el primero es Base A, el último es Base B (las bases siempre se ven)
+      ruta.ida.forEach((p, i) => {
+        const esBase = i === 0 || i === ruta.ida.length - 1;
+        if (!esBase && !verPuntosIda) return;
+        const etiqueta = i === 0 ? "A" : esBase ? "B" : String(i);
+        capas.push(mapa.marcador(p, etiqueta, esBase ? COLOR_BASE : COLOR_IDA, tocaIda ? () => quitarPunto(ruta.ida, i) : null, esBase));
+      });
+      if (verPuntosRegreso) ruta.regreso.forEach((p, i) => {
+        capas.push(mapa.marcador(p, String(i + 1), COLOR_REGRESO, tocaRegreso ? () => quitarPunto(ruta.regreso, i) : null));
+      });
+
+      // Líneas: la ruta real si ya se trazó; si no, una guía punteada entre los puntos.
+      // Mientras se edita un sentido, su línea anterior queda en gris y la guía muestra cómo se amolda.
+      const guiaRegreso = [ruta.ida.at(-1), ...ruta.regreso, ruta.ida[0]];
+      if (editaSentido("ida") && ed.fase === "marcar") {
+        capas.push(mapa.linea(ruta.caminoIda, COLOR_GUIA));
+        if (ruta.ida.length > 1) capas.push(mapa.linea(ruta.ida, COLOR_IDA, true));
+      } else if (ruta.caminoIda) capas.push(mapa.linea(ruta.caminoIda, COLOR_IDA));
+      else if (ruta.ida.length > 1) capas.push(mapa.linea(ruta.ida, COLOR_GUIA, true));
+
+      if (editaSentido("regreso") && ed.fase === "marcar") {
+        capas.push(mapa.linea(ruta.caminoRegreso, COLOR_GUIA));
+        capas.push(mapa.linea(guiaRegreso, COLOR_REGRESO, true));
+      } else if (ruta.caminoRegreso) capas.push(mapa.linea(ruta.caminoRegreso, COLOR_REGRESO));
+      else if (ruta.paso === 3 && ruta.regreso.length) capas.push(mapa.linea(guiaRegreso.slice(0, -1), COLOR_GUIA, true));
+    }
+
+    function actualizarPanel() {
+      if (!document.getElementById("instruccionRuta")) return;
+      if (ruta.edicion) return panelEdicion();
+      const n = ruta.ida.length, r = ruta.regreso.length;
+      const textos = {
+        1: n === 0
+          ? "Toca en la calzada para fijar la <strong>Base A</strong> (inicio de la ruta)."
+          : `Toca los giros o quiebres clave (en avenidas largas solo inicio y final). El último punto será la <strong>Base B</strong>. Para quitar un punto, tócalo de nuevo. <strong>(${n} puntos)</strong>`,
+        2: "Revisa la ruta de ida (azul). ¿Está correcta?",
+        3: `Toca las esquinas de retorno desde la Base B hacia la Base A. Para quitar un punto, tócalo de nuevo. <strong>(${r} puntos)</strong>`,
+        4: "Revisa la ruta de regreso (naranja). Al aprobar se cierra el circuito con la Base A.",
+        5: "✔ Ruta oficial guardada. Circuito cerrado: Base A → Base B → Base A."
+      };
+      document.getElementById("instruccionRuta").innerHTML = textos[ruta.paso];
+
+      const botones = {
+        1: `<button class="btn btn-primario" onclick="verRuta('ida')" ${n < 2 ? "disabled" : ""}>Terminar Ida y Ver Ruta</button>`,
+        2: `<button class="btn btn-no" onclick="rechazar()">✗ Corregir</button>
+            <button class="btn btn-ok" onclick="aprobar()">✓ Aprobar Ida</button>`,
+        3: `<button class="btn btn-primario" onclick="verRuta('regreso')">Unir a Base A y Ver Ruta</button>`,
+        4: `<button class="btn btn-no" onclick="rechazar()">✗ Corregir</button>
+            <button class="btn btn-ok" onclick="aprobar()">✓ Aprobar y Guardar</button>`,
+        5: `<button class="btn btn-primario" onclick="editarRuta()">✏ Editar Ruta</button>`
+      };
+      document.getElementById("accionesRuta").innerHTML = botones[ruta.paso];
+    }
+
+    function panelEdicion() {
+      const ed = ruta.edicion;
+      const textos = {
+        sentido: "¿Qué sentido de la ruta quieres editar?",
+        marcar: ed.sentido === "ida"
+          ? "Los puntos de quiebre reaparecieron. Toca la esquina antigua para quitarla y toca la nueva esquina para agregarla: la línea se amolda sin romper el resto. Para <strong>alargar la ruta</strong>, toca más allá de la Base B (o antes de la Base A): ese punto pasa a ser la Nueva Base."
+          : "Los puntos de quiebre reaparecieron. Toca la esquina antigua para quitarla y toca la nueva esquina para agregarla: la línea se amolda sin romper el resto.",
+        revisar: "Revisa la ruta actualizada. ¿Guardar los cambios? Los puntos de control que no se tocaron se conservan; solo el tramo modificado o alargado quedará en ámbar en el Submódulo 4." +
+          (ed.basesMovidas ? " <strong>Se movió una base:</strong> el regreso también se recalculó desde la nueva base." : "")
+      };
+      const botones = {
+        sentido: `<button class="btn" onclick="cancelarEdicion()">✗ Cancelar</button>
+                  <button class="btn btn-primario" onclick="elegirSentidoRuta('ida')">${SENTIDOS.ida}</button>
+                  <button class="btn btn-primario" onclick="elegirSentidoRuta('regreso')">${SENTIDOS.regreso}</button>`,
+        marcar: `<button class="btn" onclick="cancelarEdicion()">✗ Cancelar</button>
+                 <button class="btn btn-primario" onclick="verRutaActualizada()" ${ruta.ida.length < 2 ? "disabled" : ""}>Ver Ruta Actualizada</button>`,
+        revisar: `<button class="btn btn-no" onclick="corregirEdicion()">✗ Corregir</button>
+                  <button class="btn btn-ok" onclick="guardarEdicion()">✓ Guardar Cambios</button>`
+      };
+      document.getElementById("instruccionRuta").innerHTML = textos[ed.fase];
+      document.getElementById("accionesRuta").innerHTML = botones[ed.fase];
+    }
+
+    // Pide el trazado vehicular (esta es la única parte que consulta al servicio de rutas)
+    async function verRuta(tramo) {
+      if (!mapa) return;
+      const puntos = tramo === "ida" ? ruta.ida : [ruta.ida.at(-1), ...ruta.regreso, ruta.ida[0]];
+      document.querySelectorAll("#accionesRuta button").forEach(b => b.disabled = true);
+      document.getElementById("instruccionRuta").textContent = "Trazando ruta…";
+      try {
+        const camino = await trazar(puntos);
+        if (tramo === "ida") { ruta.caminoIda = camino; ruta.paso = 2; }
+        else { ruta.caminoRegreso = camino; ruta.paso = 4; }
+        dibujar();
+        encuadrar(camino);
+      } catch (e) {
+        actualizarPanel();
+        document.getElementById("instruccionRuta").innerHTML = `<span class="texto-error">No se pudo trazar la ruta: ${esc(e.message)}</span>`;
+      }
+    }
+
+    // Google acepta hasta 25 puntos intermedios por consulta; si hay más, se divide en tramos
+    async function trazar(puntos) {
+      let camino = [];
+      for (let i = 0; i < puntos.length - 1; i += 26) {
+        camino = camino.concat(await PROVEEDORES[proveedor].trazar(puntos.slice(i, i + 27)));
+      }
+      return camino;
+    }
+
+    function encuadrar(camino) {
+      if (mapa && camino.length) mapa.encuadrar(camino);
+    }
+
+    function aprobar() {
+      if (ruta.paso === 2) {
+        ruta.paso = 3; // el regreso arranca desde la Base B
+      } else if (ruta.paso === 4) {
+        guardarRutaOficial();
+        ruta.paso = 5;
+      }
+      dibujar();
+    }
+
+    function guardarRutaOficial() {
+      const { ida, regreso, caminoIda, caminoRegreso } = ruta;
+      try { localStorage.setItem(CLAVE_RUTA, JSON.stringify({ ida, regreso, caminoIda, caminoRegreso })); } catch (e) {}
+    }
+
+    // Corregir: vuelve a la marcación conservando los puntos
+    function rechazar() {
+      if (ruta.paso === 2) { ruta.caminoIda = null; ruta.paso = 1; }
+      else if (ruta.paso === 4) { ruta.caminoRegreso = null; ruta.paso = 3; }
+      dibujar();
+    }
+
+    // ---------- Edición de la ruta ya guardada ([ ✏ Editar Ruta ]) ----------
+    const copiarRuta = () => JSON.parse(JSON.stringify({
+      ida: ruta.ida, regreso: ruta.regreso, caminoIda: ruta.caminoIda, caminoRegreso: ruta.caminoRegreso
+    }));
+    const mismoPunto = (a, b) => a.lat === b.lat && a.lng === b.lng;
+
+    function editarRuta() {
+      ruta.edicion = { fase: "sentido", sentido: null, respaldo: copiarRuta(), basesMovidas: false };
+      dibujar();
+    }
+
+    function elegirSentidoRuta(sentido) {
+      Object.assign(ruta.edicion, { sentido, fase: "marcar" });
+      dibujar();
+    }
+
+    // Inserta el punto donde menos alarga el recorrido: entre dos puntos (cambio de calle)
+    // o, en la ida, en un extremo (alargue: el nuevo extremo pasa a ser la Nueva Base A o B)
+    function insertarPunto(p) {
+      const enIda = ruta.edicion.sentido === "ida";
+      const secuencia = enIda ? ruta.ida : [ruta.ida.at(-1), ...ruta.regreso, ruta.ida[0]];
+      let mejor = { i: secuencia.length, costo: Infinity };
+      if (enIda && secuencia.length) {
+        mejor = { i: secuencia.length, costo: distanciaMetros(secuencia.at(-1), p) }; // más allá de la Base B
+        const antes = distanciaMetros(p, secuencia[0]);                             // antes de la Base A
+        if (antes < mejor.costo) mejor = { i: 0, costo: antes };
+      }
+      for (let i = 1; i < secuencia.length; i++) {
+        const costo = distanciaMetros(secuencia[i - 1], p) + distanciaMetros(p, secuencia[i]) - distanciaMetros(secuencia[i - 1], secuencia[i]);
+        if (costo < mejor.costo) mejor = { i, costo };
+      }
+      if (enIda) ruta.ida.splice(mejor.i, 0, p);
+      else ruta.regreso.splice(mejor.i - 1, 0, p);
+      dibujar();
+    }
+
+    async function verRutaActualizada() {
+      if (!mapa) return;
+      const ed = ruta.edicion, antes = ed.respaldo;
+      document.querySelectorAll("#accionesRuta button").forEach(b => b.disabled = true);
+      document.getElementById("instruccionRuta").textContent = "Trazando ruta actualizada…";
+      try {
+        if (ed.sentido === "ida") {
+          const caminoIda = await trazar(ruta.ida);
+          // Si cambió una base (alargue), el regreso también debe salir y llegar a las nuevas bases
+          ed.basesMovidas = !mismoPunto(ruta.ida[0], antes.ida[0]) || !mismoPunto(ruta.ida.at(-1), antes.ida.at(-1));
+          if (ed.basesMovidas) ruta.caminoRegreso = await trazar([ruta.ida.at(-1), ...ruta.regreso, ruta.ida[0]]);
+          ruta.caminoIda = caminoIda;
+        } else {
+          ruta.caminoRegreso = await trazar([ruta.ida.at(-1), ...ruta.regreso, ruta.ida[0]]);
+        }
+        ed.fase = "revisar";
+        dibujar();
+        encuadrar(ruta.caminoIda.concat(ruta.caminoRegreso));
+      } catch (e) {
+        actualizarPanel();
+        document.getElementById("instruccionRuta").innerHTML = `<span class="texto-error">No se pudo trazar la ruta: ${esc(e.message)}</span>`;
+      }
+    }
+
+    // Corregir: vuelve a marcar conservando los puntos (la línea anterior se repone)
+    function corregirEdicion() {
+      const ed = ruta.edicion;
+      Object.assign(ruta, { caminoIda: ed.respaldo.caminoIda, caminoRegreso: ed.respaldo.caminoRegreso });
+      Object.assign(ed, { fase: "marcar", basesMovidas: false });
+      dibujar();
+    }
+
+    function guardarEdicion() {
+      guardarRutaOficial();
+      actualizarDependientes(ruta.edicion.respaldo);
+      ruta.edicion = null;
+      dibujar();
+      return true;
+    }
+
+    function cancelarEdicion() {
+      Object.assign(ruta, ruta.edicion.respaldo);
+      ruta.edicion = null;
+      dibujar();
+    }
+
+    function pendienteRuta() {
+      const ed = ruta.edicion;
+      if (ed) {
+        if (ed.fase === "sentido") return null;
+        return {
+          guardar: ed.fase === "revisar" ? guardarEdicion : null,
+          descartar: cancelarEdicion,
+          nota: ed.fase === "revisar" ? "" : "Para guardar, primero pulsa Ver Ruta Actualizada y revisa la línea."
+        };
+      }
+      if (ruta.paso === 5 || (ruta.paso === 1 && !ruta.ida.length)) return null;
+      return {
+        guardar: ruta.paso === 4 ? () => { aprobar(); return true; } : null,
+        descartar: () => Object.assign(ruta, { paso: 1, ida: [], regreso: [], caminoIda: null, caminoRegreso: null }),
+        nota: ruta.paso === 4 ? "" : "Para guardar, termina el trazado de ida y regreso y apruébalo con ✓."
+      };
+    }
+
+    // ============================================================
+    // SUBMÓDULO 3: DESVÍOS DE RUTA (VARIANTES TEMPORALES POR CALENDARIO)
+    // Cada desvío se traza una sola vez y se guarda con nombre; después se activa solo
+    // en las fechas elegidas, sin redibujar ni volver a consultar el servicio de rutas.
+    // ============================================================
+    const CLAVE_DESVIOS = "config_desvios";
+    const COLOR_DESVIO = "#8250df", COLOR_DESVIO_ACTIVO = "#1a7f37", COLOR_ESQUIVADO = "#d1242f";
+    const RADIO_CONTROL = 25; // radio técnico de un punto de control (50 m de diámetro en calzada)
+    const INTERVALO = { objetivo: 5, tolerancia: 3, correteo: 2, planchado: 8 }; // minutos con el carro delantero
+    const SENTIDOS = { ida: "Ida (A → B)", regreso: "Regreso (B → A)" };
+    const MESES = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+    const DIAS_SEMANA = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"];
+
+    let desvios = [];
+    try { desvios = JSON.parse(localStorage.getItem(CLAVE_DESVIOS)) || []; } catch (e) {}
+
+    let editor = null;       // null = se ve la lista; si no, el desvío que se está creando
+    let porEliminar = null;  // id del desvío que espera confirmación para eliminarse
+    let seleccionado = null; // id del desvío resaltado en el mapa
+    let mapaDesvio = null, capasDesvio = [];
+
+    function guardarDesvios() {
+      try { localStorage.setItem(CLAVE_DESVIOS, JSON.stringify(desvios)); } catch (e) {}
+    }
+
+    // Ruta oficial guardada en el Submódulo 2 (null si todavía no existe)
+    function rutaOficial() {
+      try {
+        const r = JSON.parse(localStorage.getItem(CLAVE_RUTA));
+        return r && r.caminoIda && r.caminoRegreso ? r : null;
+      } catch (e) { return null; }
+    }
+
+    function caminoOficial(sentido) {
+      const r = rutaOficial();
+      return sentido === "ida" ? r.caminoIda : r.caminoRegreso;
+    }
+
+    function esc(texto) {
+      return String(texto).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+    }
+
+    function fechaISO(fecha) {
+      return `${fecha.getFullYear()}-${String(fecha.getMonth() + 1).padStart(2, "0")}-${String(fecha.getDate()).padStart(2, "0")}`;
+    }
+    const hoyISO = () => fechaISO(new Date());
+
+    function fechaCorta(iso) {
+      const [a, m, d] = iso.split("-").map(Number);
+      return new Date(a, m - 1, d).toLocaleDateString("es-PE", { weekday: "short", day: "numeric", month: "short" });
+    }
+
+    // Activación y desactivación automática: un desvío está activo solo en sus fechas
+    const estaActivo = d => d.fechas.includes(hoyISO());
+
+    // ---------- Geometría ----------
+    function distanciaMetros(a, b) {
+      const rad = x => x * Math.PI / 180;
+      const dLat = rad(b.lat - a.lat), dLng = rad(b.lng - a.lng);
+      const h = Math.sin(dLat / 2) ** 2 + Math.cos(rad(a.lat)) * Math.cos(rad(b.lat)) * Math.sin(dLng / 2) ** 2;
+      return 2 * 6371000 * Math.asin(Math.sqrt(h));
+    }
+
+    // Imantación (Snap-to-Route): el punto más cercano sobre el camino.
+    // "posicion" dice qué tan adelante está en la ruta (tramo + fracción), para comparar inicio y fin.
+    function imantar(p, camino) {
+      let mejor = null;
+      const k = Math.cos(p.lat * Math.PI / 180);
+      for (let i = 0; i < camino.length - 1; i++) {
+        const a = camino[i], b = camino[i + 1];
+        const ax = (a.lng - p.lng) * k, ay = a.lat - p.lat;
+        const dx = (b.lng - a.lng) * k, dy = b.lat - a.lat;
+        const largo = dx * dx + dy * dy;
+        const t = largo ? Math.max(0, Math.min(1, -(ax * dx + ay * dy) / largo)) : 0;
+        const x = ax + t * dx, y = ay + t * dy, d = x * x + y * y;
+        if (!mejor || d < mejor.d) {
+          mejor = { d, posicion: i + t, punto: { lat: a.lat + t * (b.lat - a.lat), lng: a.lng + t * (b.lng - a.lng) } };
+        }
+      }
+      return { posicion: mejor.posicion, punto: mejor.punto };
+    }
+
+    // Parte del camino oficial entre dos posiciones (el tramo que el desvío esquiva)
+    function tramoEntre(camino, desde, hasta) {
+      const punto = pos => {
+        const i = Math.min(Math.floor(pos), camino.length - 2), t = pos - i, a = camino[i], b = camino[i + 1];
+        return { lat: a.lat + t * (b.lat - a.lat), lng: a.lng + t * (b.lng - a.lng) };
+      };
+      return [punto(desde), ...camino.slice(Math.floor(desde) + 1, Math.floor(hasta) + 1), punto(hasta)];
+    }
+
+    // ---------- Algoritmo de Bypass por Intervalo ----------
+    // Puntos de control registrados en el Submódulo 4, como { nombre, lat, lng, sentido }
+    function obtenerPuntosControl() {
+      return ["ida", "regreso"].flatMap(s => controles[s].puntos.map(p => ({ nombre: p.nombre, lat: p.punto.lat, lng: p.punto.lng, sentido: s })));
+    }
+
+    // Un punto de control queda [ Omitido por Desvío ] si está sobre la ruta oficial del mismo
+    // sentido y entre el inicio y el fin del desvío
+    function puntosOmitidos(d) {
+      if (!d.inicio || !d.fin) return [];
+      const camino = caminoOficial(d.sentido);
+      return obtenerPuntosControl().filter(p => {
+        if (p.sentido && p.sentido !== d.sentido) return false;
+        const s = imantar(p, camino);
+        return distanciaMetros(p, s.punto) <= RADIO_CONTROL && s.posicion >= d.inicio.posicion && s.posicion <= d.fin.posicion;
+      });
+    }
+
+    // ---------- Vistas ----------
+    function sinRutaHTML(motivo) {
+      return `
+        <section class="panel">
+          <div class="marcador">
+            Primero guarda la Ruta Oficial: ${motivo}
+            <div class="acciones centrado">
+              <button class="btn btn-primario" onclick="abrir('ruta')">Ir a Trazado de Ruta</button>
+            </div>
+          </div>
+        </section>
+      `;
+    }
+
+    function vistaDesvios() {
+      if (!rutaOficial()) return sinRutaHTML("los desvíos se imantan a ella.");
+      return `
+        <section class="panel">
+          ${selectorMapa()}
+          <div id="zonaDesvio"></div>
+          <div id="mapa"></div>
+        </section>
+      `;
+    }
+
+    function activarDesvios() {
+      mapaDesvio = null;
+      capasDesvio = [];
+      if (!document.getElementById("zonaDesvio")) return;
+      pintarDesvios();
+      const r = rutaOficial();
+      montarMapa(r.ida[0], tocarMapaDesvio, m => {
+        mapaDesvio = m;
+        dibujarDesvios();
+        mapaDesvio.encuadrar(r.caminoIda.concat(r.caminoRegreso));
+      });
+    }
+
+    function pintarDesvios() {
+      const zona = document.getElementById("zonaDesvio");
+      if (!zona) return;
+      zona.innerHTML = editor ? editorHTML() : listaDesviosHTML();
+      dibujarDesvios();
+    }
+
+    function resumenFechas(d) {
+      const proxima = d.fechas.filter(f => f >= hoyISO()).sort()[0];
+      const total = `${d.fechas.length} fecha${d.fechas.length === 1 ? "" : "s"}`;
+      return proxima ? `${total} · próxima: ${fechaCorta(proxima)}` : `${total} · sin fechas próximas`;
+    }
+
+    function listaDesviosHTML() {
+      const filas = desvios.map(d => {
+        const activo = estaActivo(d);
+        const eliminar = porEliminar === d.id
+          ? `<span class="confirmar">¿Eliminar?
+               <button class="btn btn-no" onclick="eliminarDesvio('${d.id}')">Sí</button>
+               <button class="btn" onclick="pedirEliminar(null)">No</button>
+             </span>`
+          : `<button class="btn btn-eliminar" title="Eliminar desvío" onclick="pedirEliminar('${d.id}')">✗</button>`;
+        return `
+          <div class="desvio-fila ${activo ? "activo" : ""}">
+            <button class="desvio-info" onclick="enfocarDesvio('${d.id}')">
+              <strong>${esc(d.nombre)}</strong>
+              <span>${SENTIDOS[d.sentido]} · ${resumenFechas(d)}</span>
+            </button>
+            <label class="switch ${activo ? "habilitado" : ""}">
+              <input type="checkbox" ${activo ? "checked" : ""} onchange="activarHoy('${d.id}', this.checked)">
+              ${activo ? "Activo hoy" : "Desactivado"}
+            </label>
+            ${eliminar}
+          </div>
+        `;
+      }).join("");
+      return `
+        <div class="barra-ruta">
+          <p class="instruccion">
+            Desvíos guardados: <strong>${desvios.length}</strong>. En verde, los que están activos hoy.
+            <span class="ayuda">El interruptor los activa o desactiva hoy en cualquier momento de la jornada (accidentes, obras o cierres repentinos).</span>
+            <span class="ayuda">Si un desvío cambia de calles, no se edita: elimínalo con ✗ y registra uno nuevo.</span>
+          </p>
+          <div class="acciones"><button class="btn btn-primario" onclick="nuevoDesvio()">+ Agregar Nuevo Desvío</button></div>
+        </div>
+        <div class="desvio-lista">${filas || `<p class="ayuda">Aún no hay desvíos guardados.</p>`}</div>
+      `;
+    }
+
+    // Instrucción del paso de marcación según qué extremos estén anclados
+    function textoMarcacion() {
+      const e = editor;
+      if (!e.inicio && (e.fin || e.puntos.length)) return "Falta el <strong>Punto de Salida</strong>: el siguiente toque se imantará a la ruta oficial para reponerlo.";
+      if (!e.inicio) return "<strong>Toque 1 — Punto de Salida:</strong> toca la línea oficial donde las combis abandonan su ruta normal (se imanta a la ruta).";
+      if (!e.fin && e.puntos.length) return "Falta el <strong>Punto de Entrada</strong>: el siguiente toque se imantará a la ruta oficial para reponerlo.";
+      if (!e.fin) return "<strong>Toque 2 — Punto de Entrada:</strong> toca más adelante sobre la línea oficial donde las combis regresan a su ruta normal (se imanta a la ruta).";
+      return `Salida <strong>(S)</strong> y Entrada <strong>(E)</strong> ancladas. Toca las esquinas de las calles alternas: cada toque se agrega como punto intermedio del puente.
+        Si una calle figura en contra o el trazo se va por otro lado, agrega puntos seguidos en esas cuadras. Para quitar un punto, tócalo de nuevo.
+        <strong>(${e.puntos.length} intermedios)</strong>`;
+    }
+
+    function editorHTML() {
+      const textos = {
+        1: "¿En qué sentido de la ruta oficial se hará el desvío?",
+        2: textoMarcacion(),
+        3: "Revisa el desvío (morado). En rojo punteado está el tramo oficial que se esquiva. Si hay que ajustar el recorrido, pulsa ✗: se conservan la Salida, la Entrada y los intermedios.",
+        4: "Ponle un nombre y elige en el calendario las fechas en que estará activo."
+      };
+      const botones = {
+        1: `<button class="btn" onclick="cancelarDesvio()">Cancelar</button>
+            <button class="btn btn-primario" onclick="elegirSentido('ida')">${SENTIDOS.ida}</button>
+            <button class="btn btn-primario" onclick="elegirSentido('regreso')">${SENTIDOS.regreso}</button>`,
+        2: `<button class="btn" onclick="cancelarDesvio()">Cancelar</button>
+            <button class="btn btn-primario" onclick="trazarDesvio()" ${editor.inicio && editor.fin ? "" : "disabled"}>Ver Desvío</button>`,
+        3: `<button class="btn btn-no" onclick="corregirDesvio()">✗ Corregir</button>
+            <button class="btn btn-ok" onclick="aprobarDesvio()">✓ Aprobar Desvío</button>`,
+        4: `<button class="btn" onclick="cancelarDesvio()">Cancelar</button>
+            <button class="btn btn-primario" onclick="guardarDesvio()">Guardar Desvío</button>`
+      };
+      return `
+        <div class="barra-ruta">
+          <p class="instruccion" id="instruccionDesvio">${textos[editor.paso]}</p>
+          <div class="acciones">${botones[editor.paso]}</div>
+        </div>
+        ${editor.paso === 4 ? formularioDesvioHTML() : ""}
+      `;
+    }
+
+    function formularioDesvioHTML() {
+      return `
+        <div class="form-desvio">
+          <div class="campo">
+            <label for="nombreDesvio">Nombre del desvío <span class="obligatorio">*</span></label>
+            <input id="nombreDesvio" placeholder="Feria de los Lunes - Juliaca" value="${esc(editor.nombre)}" oninput="editor.nombre = this.value">
+          </div>
+          <div class="campo">
+            <label>Fechas activas <span class="obligatorio">*</span></label>
+            <div id="calendarioDesvio">${calendarioHTML()}</div>
+          </div>
+          <p class="texto-error" id="errorDesvio" hidden></p>
+          ${reglasHTML(editor)}
+        </div>
+      `;
+    }
+
+    function reglasHTML(d) {
+      const omitidos = puntosOmitidos(d);
+      const control = !obtenerPuntosControl().length
+        ? "Aún no hay puntos de control registrados. Cuando existan, los que caigan en el tramo esquivado se marcarán solos como <strong>[ Omitido por Desvío ]</strong>."
+        : omitidos.length
+          ? `Se marcan como <strong>[ Omitido por Desvío ]</strong>: ${omitidos.map(p => esc(p.nombre)).join(", ")}.`
+          : "Ningún punto de control cae en el tramo esquivado.";
+      return `
+        <div class="reglas">
+          <strong>Reglas que se aplican mientras el desvío esté activo</strong>
+          <ul>
+            <li><strong>Puntos de control:</strong> ${control}</li>
+            <li><strong>Inmunidad:</strong> el chofer queda exento de multas por abandono de ruta y al llegar a la Base B se le acredita su media vuelta (+0.5) completa.</li>
+            <li><strong>Hora meta neutralizada:</strong> en el tramo desviado se desactiva la hora meta fija.</li>
+            <li><strong>Regulación por intervalo con el anterior</strong> (al reincorporarse o llegar a la Base B, con la hora real del GPS):
+              🟢 Verde ${INTERVALO.objetivo} ± ${INTERVALO.tolerancia} min ·
+              🔴 Rojo correteo: menos de ${INTERVALO.correteo} min ·
+              🟡 Amarillo planchado: más de ${INTERVALO.planchado} min</li>
+          </ul>
+        </div>
+      `;
+    }
+
+    // ---------- Calendario interactivo ----------
+    function calendarioHTML() {
+      const { anio, mes } = editor.cal;
+      const hoy = hoyISO(), ahora = new Date();
+      const vacios = (new Date(anio, mes, 1).getDay() + 6) % 7; // la semana empieza en lunes
+      const totalDias = new Date(anio, mes + 1, 0).getDate();
+      let celdas = "<span></span>".repeat(vacios);
+      for (let dia = 1; dia <= totalDias; dia++) {
+        const f = fechaISO(new Date(anio, mes, dia));
+        const clases = ["dia", editor.fechas.includes(f) && "elegido", f === hoy && "hoy"].filter(Boolean).join(" ");
+        celdas += `<button type="button" class="${clases}" ${f < hoy ? "disabled" : ""} onclick="alternarFecha('${f}')">${dia}</button>`;
+      }
+      const esMesActual = anio === ahora.getFullYear() && mes === ahora.getMonth();
+      return `
+        <div class="calendario">
+          <div class="cal-cabecera">
+            <button type="button" class="btn" onclick="moverMes(-1)" ${esMesActual ? "disabled" : ""}>‹</button>
+            <strong>${MESES[mes]} ${anio}</strong>
+            <button type="button" class="btn" onclick="moverMes(1)">›</button>
+          </div>
+          <div class="cal-grilla">
+            ${DIAS_SEMANA.map((nombre, i) => `
+              <button type="button" class="cal-semana" title="Marcar o quitar todos los ${nombre.toLowerCase()} del mes" onclick="alternarDiaSemana(${i})">${nombre.slice(0, 2)}</button>
+            `).join("")}
+            ${celdas}
+          </div>
+          <p class="ayuda">Toca un día para activarlo o quitarlo. Toca Lu, Ma, Mi… para marcar todos esos días del mes (ej. todos los lunes). <strong>${editor.fechas.length} día(s) elegido(s).</strong></p>
+        </div>
+      `;
+    }
+
+    function pintarCalendario() {
+      document.getElementById("calendarioDesvio").innerHTML = calendarioHTML();
+    }
+
+    function alternarFecha(f) {
+      const i = editor.fechas.indexOf(f);
+      if (i >= 0) editor.fechas.splice(i, 1);
+      else editor.fechas.push(f);
+      pintarCalendario();
+    }
+
+    // Marca todos los días de esa semana en el mes (o los quita si ya estaban todos)
+    function alternarDiaSemana(diaSemana) {
+      const { anio, mes } = editor.cal, hoy = hoyISO(), dias = [];
+      for (let d = 1; d <= new Date(anio, mes + 1, 0).getDate(); d++) {
+        const fecha = new Date(anio, mes, d);
+        if ((fecha.getDay() + 6) % 7 === diaSemana && fechaISO(fecha) >= hoy) dias.push(fechaISO(fecha));
+      }
+      const yaEstaban = dias.every(f => editor.fechas.includes(f));
+      editor.fechas = editor.fechas.filter(f => !dias.includes(f));
+      if (!yaEstaban) editor.fechas.push(...dias);
+      pintarCalendario();
+    }
+
+    function moverMes(paso) {
+      const f = new Date(editor.cal.anio, editor.cal.mes + paso, 1);
+      editor.cal = { anio: f.getFullYear(), mes: f.getMonth() };
+      pintarCalendario();
+    }
+
+    // ---------- Mapa de desvíos ----------
+    // editor.inicio = Punto de Salida y editor.fin = Punto de Entrada (los dos imantados a la ruta oficial);
+    // editor.puntos = puntos intermedios del puente, en orden de marcha
+    const puenteDesvio = () => [editor.inicio.punto, ...editor.puntos, editor.fin.punto];
+
+    function dibujarDesvios() {
+      if (!mapaDesvio) return;
+      capasDesvio.forEach(quitar => quitar());
+      capasDesvio = [];
+      const m = mapaDesvio, r = rutaOficial(), poner = capa => capasDesvio.push(capa);
+
+      // Ruta oficial: si se eligió un sentido, se muestra únicamente la línea de ese sentido
+      const sentido = editor && editor.sentido;
+      if (sentido !== "regreso") poner(m.linea(r.caminoIda, COLOR_IDA));
+      if (sentido !== "ida") poner(m.linea(r.caminoRegreso, COLOR_REGRESO));
+      poner(m.circulo(r.ida[0], RADIO_BASE, COLOR_BASE));
+      poner(m.circulo(r.ida.at(-1), RADIO_BASE, COLOR_BASE));
+      poner(m.marcador(r.ida[0], "A", COLOR_BASE, null, true));
+      poner(m.marcador(r.ida.at(-1), "B", COLOR_BASE, null, true));
+
+      // Lista: todos los desvíos guardados (verde = activo hoy); el elegido muestra el tramo esquivado
+      if (!editor) {
+        desvios.forEach(d => {
+          if (d.id === seleccionado) poner(m.linea(tramoEntre(caminoOficial(d.sentido), d.inicio.posicion, d.fin.posicion), COLOR_ESQUIVADO, true));
+          poner(m.linea(d.camino, estaActivo(d) ? COLOR_DESVIO_ACTIVO : COLOR_DESVIO));
+        });
+        return;
+      }
+      if (!editor.sentido) return;
+
+      // Con los dos extremos anclados se ve el tramo oficial que se esquiva (rojo punteado)
+      if (editor.inicio && editor.fin) {
+        poner(m.linea(tramoEntre(caminoOficial(editor.sentido), editor.inicio.posicion, editor.fin.posicion), COLOR_ESQUIVADO, true));
+        poner(editor.camino ? m.linea(editor.camino, COLOR_DESVIO) : m.linea(puenteDesvio(), COLOR_DESVIO, true));
+      }
+
+      // Al aprobar con ✓ los puntos se ocultan y queda solo la línea limpia del desvío
+      if (editor.paso >= 4) return;
+      const toca = editor.paso === 2;
+      if (editor.inicio) poner(m.marcador(editor.inicio.punto, "S", COLOR_DESVIO, toca ? () => quitarExtremo("inicio") : null, true));
+      if (editor.fin) poner(m.marcador(editor.fin.punto, "E", COLOR_DESVIO, toca ? () => quitarExtremo("fin") : null, true));
+      editor.puntos.forEach((p, i) => {
+        poner(m.marcador(p, String(i + 1), COLOR_DESVIO, toca ? () => quitarPuntoDesvio(i) : null));
+      });
+    }
+
+    // ---------- Acciones ----------
+    function nuevoDesvio() {
+      const hoy = new Date();
+      editor = {
+        paso: 1, sentido: null, puntos: [], camino: null, inicio: null, fin: null,
+        nombre: "", fechas: [], cal: { anio: hoy.getFullYear(), mes: hoy.getMonth() }
+      };
+      porEliminar = null;
+      seleccionado = null;
+      pintarDesvios();
+    }
+
+    function cancelarDesvio() {
+      editor = null;
+      pintarDesvios();
+    }
+
+    function elegirSentido(sentido) {
+      editor.sentido = sentido;
+      editor.paso = 2;
+      pintarDesvios();
+    }
+
+    function avisoDesvio(texto) {
+      document.getElementById("instruccionDesvio").innerHTML = `<span class="texto-error">${texto}</span>`;
+    }
+
+    // Poner o quitar puntos solo ocurre en memoria ($0.00).
+    // Primero se anclan la Salida y la Entrada (imantadas a la ruta oficial); después, cada toque
+    // es un punto intermedio del puente. Si falta un extremo, el siguiente toque lo repone.
+    function tocarMapaDesvio(p) {
+      if (!editor || editor.paso !== 2) return;
+      const s = imantar(p, caminoOficial(editor.sentido)), sentido = DEL_SENTIDO[editor.sentido];
+      if (!editor.inicio) {
+        if (editor.fin && s.posicion >= editor.fin.posicion) return avisoDesvio(`La Salida debe quedar antes que la Entrada, en el sentido ${sentido}.`);
+        editor.inicio = s;
+      } else if (!editor.fin) {
+        if (s.posicion <= editor.inicio.posicion) return avisoDesvio(`La Entrada debe quedar más adelante que la Salida, en el sentido ${sentido}.`);
+        editor.fin = s;
+      } else {
+        insertarIntermedio(p);
+      }
+      pintarDesvios();
+    }
+
+    // El intermedio se inserta donde menos alarga el puente, sin mover la Salida ni la Entrada
+    function insertarIntermedio(p) {
+      const puente = puenteDesvio();
+      let mejor = { i: 1, costo: Infinity };
+      for (let i = 1; i < puente.length; i++) {
+        const costo = distanciaMetros(puente[i - 1], p) + distanciaMetros(p, puente[i]) - distanciaMetros(puente[i - 1], puente[i]);
+        if (costo < mejor.costo) mejor = { i, costo };
+      }
+      editor.puntos.splice(mejor.i - 1, 0, p);
+    }
+
+    // Tocar la Salida o la Entrada la elimina (los demás puntos se conservan)
+    function quitarExtremo(cual) {
+      editor[cual] = null;
+      pintarDesvios();
+    }
+
+    function quitarPuntoDesvio(i) {
+      editor.puntos.splice(i, 1);
+      pintarDesvios();
+    }
+
+    // Única consulta al servicio de rutas: se hace una sola vez al crear el desvío
+    async function trazarDesvio() {
+      if (!mapaDesvio || !editor.inicio || !editor.fin) return;
+      document.querySelectorAll("#zonaDesvio .acciones button").forEach(b => b.disabled = true);
+      document.getElementById("instruccionDesvio").textContent = "Trazando desvío…";
+      try {
+        editor.camino = await trazar(puenteDesvio());
+        editor.paso = 3;
+        pintarDesvios();
+        mapaDesvio.encuadrar(editor.camino);
+      } catch (e) {
+        pintarDesvios();
+        document.getElementById("instruccionDesvio").innerHTML = `<span class="texto-error">No se pudo trazar el desvío: ${esc(e.message)}</span>`;
+      }
+    }
+
+    // Corregir: vuelve a la marcación conservando la Salida, la Entrada y los intermedios
+    function corregirDesvio() {
+      Object.assign(editor, { paso: 2, camino: null });
+      pintarDesvios();
+    }
+
+    function aprobarDesvio() {
+      editor.paso = 4;
+      pintarDesvios();
+    }
+
+    function guardarDesvio() {
+      const nombre = editor.nombre.trim();
+      const error = !nombre ? "Escribe un nombre para el desvío."
+        : !editor.fechas.length ? "Elige al menos una fecha en el calendario." : "";
+      const caja = document.getElementById("errorDesvio");
+      caja.textContent = error;
+      caja.hidden = !error;
+      if (error) return false;
+
+      const { sentido, puntos, camino, inicio, fin } = editor;
+      desvios.push({ id: "d" + Date.now(), nombre, sentido, puntos, camino, inicio, fin, fechas: editor.fechas.slice().sort(), intervalo: INTERVALO });
+      guardarDesvios();
+      editor = null;
+      pintarDesvios();
+      return true;
+    }
+
+    function pendienteDesvios() {
+      if (!editor || !editor.sentido) return null;
+      return {
+        guardar: editor.paso === 4 ? guardarDesvio : null,
+        descartar: () => { editor = null; },
+        nota: editor.paso === 4 ? "" : "Para guardar, termina el desvío, apruébalo con ✓ y ponle nombre y fechas."
+      };
+    }
+
+    // Desvíos libres en caliente: se activan o desactivan para hoy sin tocar sus otras fechas
+    function activarHoy(id, activo) {
+      const d = desvios.find(x => x.id === id), hoy = hoyISO();
+      d.fechas = activo ? [...new Set([...d.fechas, hoy])].sort() : d.fechas.filter(f => f !== hoy);
+      guardarDesvios();
+      pintarDesvios();
+    }
+
+    function enfocarDesvio(id) {
+      seleccionado = id;
+      dibujarDesvios();
+      const d = desvios.find(x => x.id === id);
+      if (mapaDesvio && d) mapaDesvio.encuadrar(d.camino);
+    }
+
+    function pedirEliminar(id) {
+      porEliminar = id;
+      pintarDesvios();
+    }
+
+    function eliminarDesvio(id) {
+      desvios = desvios.filter(d => d.id !== id);
+      porEliminar = null;
+      if (seleccionado === id) seleccionado = null;
+      guardarDesvios();
+      pintarDesvios();
+    }
+
+    // ============================================================
+    // SUBMÓDULO 4: PUNTOS DE CONTROL Y TIEMPOS DE TRAMO (BASE A ↔ BASE B)
+    // Cada sentido se divide en tramos: Base → control → control → … → Base.
+    // Los minutos de un tramo se guardan en el punto donde termina (un control o la base final).
+    // ============================================================
+    const CLAVE_CONTROLES = "config_controles";
+    const COLOR_OK = "#1a7f37", COLOR_PENDIENTE = "#f08c00", COLOR_CONTROL = "#0b7285";
+    const DISTANCIA_PISTA = 60; // un toque a más de estos metros de la línea no cuenta como "sobre la pista"
+    const NOMBRE_SENTIDO = { ida: "Ida", regreso: "Regreso" };
+    const DEL_SENTIDO = { ida: "de la Ida", regreso: "del Regreso" };
+    const BOTON_SENTIDO = { ida: "Base A ➔ Base B (Ida)", regreso: "Base B ➔ Base A (Regreso)" };
+
+    const sentidoVacio = () => ({ puntos: [], fin: { valle: null, punta: null } });
+    let controles = { ida: sentidoVacio(), regreso: sentidoVacio() };
+    try { controles = JSON.parse(localStorage.getItem(CLAVE_CONTROLES)) || controles; } catch (e) {}
+
+    let sentidoC = "ida";  // sentido que se está viendo
+    let ventana = null;    // ventanilla flotante abierta
+    let mapaControles = null, capasControles = [];
+
+    function guardarControles() {
+      try { localStorage.setItem(CLAVE_CONTROLES, JSON.stringify(controles)); } catch (e) {}
+    }
+
+    // Base inicial, controles en orden de marcha y base final. "t" es donde se guardan los minutos del tramo que termina ahí.
+    function nodos(s) {
+      const [inicio, fin] = s === "ida" ? ["Base A", "Base B"] : ["Base B", "Base A"];
+      return [
+        { nombre: inicio, posicion: 0, t: null },
+        ...controles[s].puntos.map(p => ({ nombre: p.nombre, posicion: p.posicion, t: p, control: p })),
+        { nombre: fin, posicion: caminoOficial(s).length - 1, t: controles[s].fin }
+      ];
+    }
+
+    // Índice del nodo donde termina el tramo que contiene esa posición
+    function tramoEn(posicion) {
+      const n = nodos(sentidoC);
+      for (let i = 1; i < n.length; i++) if (posicion <= n[i].posicion) return i;
+      return n.length - 1;
+    }
+
+    const sinMinutos = t => { t.valle = null; t.punta = null; };
+
+    // ---------- Regla de estabilidad operativa en jornada ----------
+    // Con el saque del día ya lanzado en el Módulo de Asistencia, los controles quedan fijos hasta
+    // mañana para no cambiar las columnas de las tablas del día (los desvíos siguen libres).
+    function jornadaIniciada() {
+      try {
+        const j = JSON.parse(localStorage.getItem("asistencia_jornada"));
+        return !!j && j.fecha === hoyISO() && !!j.parametros;
+      } catch (e) { return false; }
+    }
+
+    // Por qué en ese punto solo se puede asignar tiempo de tramo (null = se puede poner un control)
+    const MOTIVO_SOLO_TRAMO = {
+      base: "Dentro del radio de la base no se pueden poner controles.",
+      desvio: "Este punto está dentro del tramo esquivado por un desvío activo hoy: ahí no se colocan controles.",
+      jornada: "🔒 La jornada de hoy ya fue despachada: no se pueden agregar ni eliminar controles hasta mañana."
+    };
+
+    // ---------- Conexión automática con el Submódulo 2 ----------
+    const UMBRAL_CAMBIO = 20; // metros: lo que se aparta más que esto de la línea anterior cuenta como modificado
+
+    // Puntos tomados cada ~10 m a lo largo del camino, con su posición
+    function muestras(camino, paso = 10) {
+      const lista = [];
+      for (let i = 0; i < camino.length - 1; i++) {
+        const a = camino[i], b = camino[i + 1], partes = Math.max(1, Math.ceil(distanciaMetros(a, b) / paso));
+        for (let k = 0; k < partes; k++) {
+          const t = k / partes;
+          lista.push({ posicion: i + t, punto: { lat: a.lat + t * (b.lat - a.lat), lng: a.lng + t * (b.lng - a.lng) } });
+        }
+      }
+      lista.push({ posicion: camino.length - 1, punto: camino.at(-1) });
+      return lista;
+    }
+
+    // Posiciones de la línea nueva donde la ruta cambió: calles nuevas, calles quitadas y alargues
+    function posicionesModificadas(anterior, nuevo) {
+      const marcas = [];
+      muestras(nuevo).forEach(m => {
+        if (distanciaMetros(m.punto, imantar(m.punto, anterior).punto) > UMBRAL_CAMBIO) marcas.push(m.posicion);
+      });
+      muestras(anterior).forEach(m => {
+        const s = imantar(m.punto, nuevo);
+        if (distanciaMetros(m.punto, s.punto) > UMBRAL_CAMBIO) marcas.push(s.posicion);
+      });
+      return marcas;
+    }
+
+    // Al guardar una ruta editada: los controles se conservan (imantados a la nueva línea),
+    // solo el tramo modificado o alargado pasa a ámbar, y los desvíos se vuelven a anclar.
+    function actualizarDependientes(antes) {
+      const caminoAntes = { ida: antes.caminoIda, regreso: antes.caminoRegreso };
+      ["ida", "regreso"].forEach(s => {
+        const nuevo = caminoOficial(s), marcas = posicionesModificadas(caminoAntes[s], nuevo);
+        controles[s].puntos.forEach(p => Object.assign(p, imantar(p.punto, nuevo)));
+        controles[s].puntos.sort((a, b) => a.posicion - b.posicion);
+        const n = nodos(s);
+        for (let i = 1; i < n.length; i++) {
+          if (marcas.some(m => m >= n[i - 1].posicion && m <= n[i].posicion)) sinMinutos(n[i].t);
+        }
+        desvios.filter(d => d.sentido === s).forEach(d => {
+          d.inicio = imantar(d.inicio.punto, nuevo);
+          d.fin = imantar(d.fin.punto, nuevo);
+        });
+      });
+      guardarControles();
+      guardarDesvios();
+    }
+
+    function vistaControles() {
+      if (!rutaOficial()) return sinRutaHTML("los puntos de control se colocan sobre ella.");
+      return `
+        <section class="panel">
+          <div class="barra-sentido" id="barraSentido"></div>
+          ${selectorMapa()}
+          <p class="instruccion" id="instruccionControles"></p>
+          <div id="mapa"></div>
+          <div class="tramos" id="listaTramos"></div>
+        </section>
+      `;
+    }
+
+    function activarControles() {
+      mapaControles = null;
+      capasControles = [];
+      ventana = null;
+      if (!document.getElementById("listaTramos")) return;
+      pintarControles();
+      montarMapa(caminoOficial(sentidoC)[0], tocarMapaControles, m => {
+        mapaControles = m;
+        dibujarControles();
+        m.encuadrar(caminoOficial(sentidoC));
+      });
+    }
+
+    function pintarControles() {
+      if (!document.getElementById("listaTramos")) return;
+      document.getElementById("barraSentido").innerHTML = ["ida", "regreso"].map(s => `
+        <button class="btn ${s === sentidoC ? "btn-primario" : ""}" onclick="cambiarSentidoControles('${s}')">${BOTON_SENTIDO[s]}</button>
+      `).join("");
+      document.getElementById("instruccionControles").innerHTML =
+        "Toca sobre la pista para agregar un punto de control o asignar los minutos de un tramo. Toca un control para editarlo. " +
+        "<strong>Verde</strong> = tramo con minutos · <strong>Ámbar parpadeando</strong> = falta asignar." +
+        (jornadaIniciada() ? `<br><span class="texto-error">${MOTIVO_SOLO_TRAMO.jornada}</span>` : "");
+      document.getElementById("listaTramos").innerHTML = listaTramosHTML();
+      dibujarControles();
+    }
+
+    function listaTramosHTML() {
+      const n = nodos(sentidoC);
+      let valle = 0, punta = 0, faltan = 0;
+      const filas = n.slice(1).map((nodo, i) => {
+        const ok = nodo.t.valle != null;
+        if (ok) { valle += nodo.t.valle; punta += nodo.t.punta; } else faltan++;
+        return `
+          <li class="${ok ? "ok" : "falta"}">
+            <span>${i + 1}. ${esc(n[i].nombre)} → ${esc(nodo.nombre)}</span>
+            <span>${ok ? `${nodo.t.valle} min valle · ${nodo.t.punta} min punta` : "Falta asignar minutos"}</span>
+          </li>
+        `;
+      }).join("");
+      return `
+        <h3>Tramos ${DEL_SENTIDO[sentidoC]} · ${n.length - 2} punto(s) de control</h3>
+        <ul>${filas}</ul>
+        <p class="ayuda">${faltan
+          ? `Faltan asignar ${faltan} tramo(s).`
+          : `Total ${NOMBRE_SENTIDO[sentidoC]}: ${valle} min en hora valle · ${punta} min en hora punta.`}</p>
+      `;
+    }
+
+    function dibujarControles() {
+      if (!mapaControles) return;
+      capasControles.forEach(quitar => quitar());
+      capasControles = [];
+      const m = mapaControles, poner = capa => capasControles.push(capa);
+      const camino = caminoOficial(sentidoC), n = nodos(sentidoC);
+
+      // Regla de colores: tramo con minutos = verde sólido; tramo pendiente = ámbar parpadeando
+      for (let i = 1; i < n.length; i++) {
+        const ok = n[i].t.valle != null;
+        poner(m.linea(tramoEntre(camino, n[i - 1].posicion, n[i].posicion), ok ? COLOR_OK : COLOR_PENDIENTE, false, !ok));
+      }
+
+      // Bases con radio de 50 m y controles con radio técnico de 25 m
+      const [inicio, fin] = sentidoC === "ida" ? ["A", "B"] : ["B", "A"];
+      poner(m.circulo(camino[0], RADIO_BASE, COLOR_BASE));
+      poner(m.circulo(camino.at(-1), RADIO_BASE, COLOR_BASE));
+      poner(m.marcador(camino[0], inicio, COLOR_BASE, null, true));
+      poner(m.marcador(camino.at(-1), fin, COLOR_BASE, null, true));
+      controles[sentidoC].puntos.forEach((c, i) => {
+        poner(m.circulo(c.punto, RADIO_CONTROL, COLOR_CONTROL));
+        poner(m.marcador(c.punto, String(i + 1), COLOR_CONTROL, () => abrirControl(c)));
+      });
+      if (ventana && !ventana.control) poner(m.marcador(ventana.punto, "+", COLOR_PENDIENTE));
+    }
+
+    // Toque sobre la pista: se imanta a la línea y abre la ventanilla flotante
+    function tocarMapaControles(p) {
+      if (ventana) return;
+      const camino = caminoOficial(sentidoC), s = imantar(p, camino);
+      if (distanciaMetros(p, s.punto) > DISTANCIA_PISTA) {
+        document.getElementById("instruccionControles").innerHTML =
+          `<span class="texto-error">Toca sobre la pista (la línea ${DEL_SENTIDO[sentidoC]}).</span>`;
+        return;
+      }
+      const cercano = controles[sentidoC].puntos.find(c => distanciaMetros(c.punto, s.punto) <= RADIO_CONTROL);
+      if (cercano) return abrirControl(cercano);
+      // En la base, dentro de un desvío activo o con la jornada en curso solo se asigna el tiempo del tramo
+      const enBase = distanciaMetros(s.punto, camino[0]) <= RADIO_BASE || distanciaMetros(s.punto, camino.at(-1)) <= RADIO_BASE;
+      const enDesvio = desvios.some(d => d.sentido === sentidoC && estaActivo(d) && d.inicio && d.fin
+        && s.posicion >= d.inicio.posicion && s.posicion <= d.fin.posicion);
+      const motivo = enBase ? "base" : enDesvio ? "desvio" : jornadaIniciada() ? "jornada" : null;
+      abrirVentanilla({ modo: motivo ? "B" : "A", soloTramo: motivo, posicion: s.posicion, punto: s.punto, control: null, nombre: "", valle: "", punta: "" });
+    }
+
+    function abrirControl(c) {
+      if (ventana) return;
+      abrirVentanilla({ modo: "A", control: c, posicion: c.posicion, punto: c.punto, nombre: c.nombre, valle: c.valle ?? "", punta: c.punta ?? "" });
+    }
+
+    function abrirVentanilla(v) {
+      ventana = v;
+      if (v.modo === "B") rellenarTramo();
+      pintarVentanilla();
+      dibujarControles();
+    }
+
+    // En Modo B se muestran los minutos que el tramo ya tenga
+    function rellenarTramo() {
+      const t = nodos(sentidoC)[tramoEn(ventana.posicion)].t;
+      if (ventana.valle === "" && t.valle != null) Object.assign(ventana, { valle: t.valle, punta: t.punta });
+    }
+
+    function pintarVentanilla(error) {
+      const v = ventana, n = nodos(sentidoC);
+      const i = v.control ? n.findIndex(x => x.control === v.control) : tramoEn(v.posicion);
+      const anterior = esc(n[i - 1].nombre), siguiente = esc(n[i].nombre);
+      const detalle = v.control
+        ? `Minutos de viaje desde <strong>${anterior}</strong> hasta este control.`
+        : v.modo === "A"
+          ? `Nuevo control entre <strong>${anterior}</strong> y <strong>${siguiente}</strong>. Los minutos van desde ${anterior} hasta este control; el tramo siguiente (hasta ${siguiente}) quedará en ámbar.`
+          : `Tramo <strong>${anterior} → ${siguiente}</strong>. No se crea ningún punto.`;
+      const minutos = (id, etiqueta, campo) => `
+        <div class="campo">
+          <label for="${id}">${etiqueta}</label>
+          <input id="${id}" type="number" min="1" max="300" inputmode="numeric" value="${v[campo]}" oninput="ventana.${campo} = this.value">
+        </div>
+      `;
+      document.getElementById("modal").innerHTML = `
+        <div class="modal-fondo"><div class="modal" role="dialog" aria-modal="true">
+          <h3>${v.modo === "A" ? "📍 Punto de Control Intermedio" : "⏱ Solo Tiempo de Tramo"}</h3>
+          <p>${detalle}</p>
+          <div class="campos-ventanilla">
+            ${v.modo === "A" ? `
+              <div class="campo">
+                <label for="vNombre">Nombre del Control</label>
+                <input id="vNombre" placeholder="Plaza de Armas" value="${esc(v.nombre)}" oninput="ventana.nombre = this.value">
+              </div>` : ""}
+            <div class="fila-2">
+              ${minutos("vValle", "Minutos Hora Valle", "valle")}
+              ${minutos("vPunta", "Minutos Hora Punta", "punta")}
+            </div>
+          </div>
+          <p class="texto-error" ${error ? "" : "hidden"}>${error || ""}</p>
+          ${v.control ? "" : `
+            <button class="btn btn-conmutar" onclick="conmutarModo()" ${v.soloTramo ? "disabled" : ""}>
+              ${v.modo === "A" ? "Cambiar a: Solo Tiempo de Tramo (Sin Control)" : "Cambiar a: Agregar Punto de Control"}
+            </button>
+            ${v.soloTramo ? `<p class="ayuda">${MOTIVO_SOLO_TRAMO[v.soloTramo]}</p>` : ""}`}
+          ${v.control && jornadaIniciada() ? `<p class="ayuda">${MOTIVO_SOLO_TRAMO.jornada}</p>` : ""}
+          <div class="acciones">
+            ${v.control && !jornadaIniciada() ? `<button class="btn btn-no" onclick="eliminarControl()">${v.confirmar ? "¿Seguro? Toca otra vez" : "🗑 Eliminar control"}</button>` : ""}
+            <button class="btn" onclick="cerrarVentanilla()">✗ Cancelar</button>
+            <button class="btn btn-ok" onclick="guardarVentanilla()">✓ Guardar</button>
+          </div>
+        </div></div>
+      `;
+    }
+
+    function conmutarModo() {
+      ventana.modo = ventana.modo === "A" ? "B" : "A";
+      if (ventana.modo === "B") rellenarTramo();
+      pintarVentanilla();
+    }
+
+    function cerrarVentanilla() {
+      document.getElementById("modal").innerHTML = "";
+      ventana = null;
+      pintarControles();
+    }
+
+    function guardarVentanilla() {
+      const v = ventana, nombre = (v.nombre || "").trim(), valle = Number(v.valle), punta = Number(v.punta);
+      const valido = x => Number.isInteger(x) && x >= 1 && x <= 300;
+      const error = v.modo === "A" && !nombre ? "Escribe el nombre del control."
+        : !valido(valle) || !valido(punta) ? "Los minutos deben ser números enteros entre 1 y 300." : "";
+      if (error) return pintarVentanilla(error);
+
+      const n = nodos(sentidoC);
+      if (v.control) {
+        Object.assign(v.control, { nombre, valle, punta });
+      } else if (v.modo === "A") {
+        sinMinutos(n[tramoEn(v.posicion)].t); // la mitad delantera queda en ámbar
+        controles[sentidoC].puntos.push({ id: "c" + Date.now(), nombre, posicion: v.posicion, punto: v.punto, valle, punta });
+        controles[sentidoC].puntos.sort((a, b) => a.posicion - b.posicion);
+      } else {
+        Object.assign(n[tramoEn(v.posicion)].t, { valle, punta });
+      }
+      guardarControles();
+      cerrarVentanilla();
+    }
+
+    function eliminarControl() {
+      if (!ventana.confirmar) { ventana.confirmar = true; return pintarVentanilla(); }
+      const n = nodos(sentidoC), i = n.findIndex(x => x.control === ventana.control);
+      sinMinutos(n[i + 1].t); // el tramo fusionado pasa a ámbar hasta confirmar minutos de viaje corrido
+      controles[sentidoC].puntos = controles[sentidoC].puntos.filter(p => p !== ventana.control);
+      guardarControles();
+      cerrarVentanilla();
+    }
+
+    // Avisa si falta el tiempo del tramo final antes de cambiar de sentido
+    function cambiarSentidoControles(s) {
+      if (s === sentidoC) return;
+      const conmutar = () => {
+        sentidoC = s;
+        pintarControles();
+        if (mapaControles) mapaControles.encuadrar(caminoOficial(s));
+      };
+      const n = nodos(sentidoC), final = n.at(-1);
+      if (final.t.valle != null) return conmutar();
+      mostrarModal(`
+        <h3>Falta asignar el tiempo del tramo final</h3>
+        <p>El tramo <strong>${esc(n.at(-2).nombre)} → ${final.nombre}</strong> ${DEL_SENTIDO[sentidoC]} aún no tiene minutos. Tócalo sobre la pista para asignarlos.</p>
+        <div class="acciones">
+          <button class="btn" data-accion="cambiar">Cambiar de sentido igual</button>
+          <button class="btn btn-primario" data-accion="quedarse">Quedarme y asignar</button>
+        </div>
+      `, accion => { if (accion === "cambiar") conmutar(); });
+    }
+
+    // ============================================================
+    // SUBMÓDULO 5: FRANJAS HORARIAS Y TOLERANCIA DE PUNTUALIDAD
+    // La Hora Normal (Valle) rige las 24 horas; solo se registran los picos de Hora Punta.
+    // ============================================================
+    const CLAVE_HORARIOS = "config_horarios";
+    const DIAS_CORTOS = ["L", "M", "M", "J", "V", "S", "D"];
+    const TOLERANCIA_MAXIMA = 15;
+
+    let horarios = { tolerancia: 2, franjas: [] };
+    try { horarios = JSON.parse(localStorage.getItem(CLAVE_HORARIOS)) || horarios; } catch (e) {}
+
+    let franjaEditando = null;  // copia de la franja abierta en la ventanilla
+    let franjaPorEliminar = null;
+
+    const finDeAnio = () => `${new Date().getFullYear()}-12-31`;
+
+    function fechaVigencia(iso) {
+      const [a, m, d] = iso.split("-").map(Number);
+      return `${d} ${MESES[m - 1].slice(0, 3).toLowerCase()} ${a}`;
+    }
+
+    // En el APK, cada cambio se transmite vía push a los celulares de los choferes en marcha
+    function guardarHorarios() {
+      try { localStorage.setItem(CLAVE_HORARIOS, JSON.stringify(horarios)); } catch (e) {}
+      pintarHorarios("✔ Guardado. Se notificará a los choferes en marcha.");
+    }
+
+    // Franja de hora punta que rige en este momento (o null = Hora Normal)
+    function franjaVigente(ahora) {
+      const hoy = fechaISO(ahora), dia = (ahora.getDay() + 6) % 7;
+      const hora = `${String(ahora.getHours()).padStart(2, "0")}:${String(ahora.getMinutes()).padStart(2, "0")}`;
+      return horarios.franjas.find(f => f.activo && f.dias[dia] && f.vigenciaDesde <= hoy && hoy <= f.vigenciaHasta && f.desde <= hora && hora < f.hasta) || null;
+    }
+
+    function vistaHorarios() {
+      return `<div id="zonaHorarios"></div>`;
+    }
+
+    function pintarHorarios(aviso) {
+      const caja = document.getElementById("zonaHorarios");
+      if (!caja) return;
+      const vigente = franjaVigente(new Date());
+      const tarjetas = horarios.franjas.map(f => {
+        const vencida = f.vigenciaHasta < hoyISO();
+        const eliminar = franjaPorEliminar === f.id
+          ? `<span class="confirmar">¿Eliminar?
+               <button class="btn btn-no" onclick="eliminarFranja('${f.id}')">Sí</button>
+               <button class="btn" onclick="pedirEliminarFranja(null)">No</button>
+             </span>`
+          : `<button class="btn btn-eliminar" onclick="pedirEliminarFranja('${f.id}')">🗑 Eliminar</button>`;
+        return `
+          <div class="franja ${f.activo ? "" : "inactiva"}">
+            <div class="franja-info">
+              <strong>${esc(f.nombre)}</strong>
+              <span>${hora12(f.desde)} – ${hora12(f.hasta)}</span>
+              <div class="chips">${DIAS_CORTOS.map((d, i) => `<span class="chip ${f.dias[i] ? "on" : ""}">${d}</span>`).join("")}</div>
+              <p class="ayuda">Vigencia: ${fechaVigencia(f.vigenciaDesde)} – ${fechaVigencia(f.vigenciaHasta)}${vencida ? " (vencida)" : ""}</p>
+            </div>
+            <div class="franja-pie">
+              <label class="switch">
+                <input type="checkbox" ${f.activo ? "checked" : ""} onchange="alternarFranja('${f.id}', this.checked)">
+                ${f.activo ? "Activo" : "Inactivo"}
+              </label>
+              <span>
+                <button class="btn" onclick="abrirFranja('${f.id}')">✏ Editar</button>
+                ${eliminar}
+              </span>
+            </div>
+          </div>
+        `;
+      }).join("");
+
+      caja.innerHTML = `
+        <section class="panel tarjeta-tolerancia">
+          <div>
+            <h3>Tolerancia de Puntualidad: ±${horarios.tolerancia} min</h3>
+            <p class="ayuda">Rige parejo para toda la jornada (hora normal y hora punta).</p>
+          </div>
+          <div class="selector-numero">
+            <button class="btn" onclick="cambiarTolerancia(-1)" aria-label="Bajar 1 minuto" ${horarios.tolerancia <= 0 ? "disabled" : ""}>−</button>
+            <span>1 min</span>
+            <button class="btn" onclick="cambiarTolerancia(1)" aria-label="Subir 1 minuto" ${horarios.tolerancia >= TOLERANCIA_MAXIMA ? "disabled" : ""}>+</button>
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="barra-ruta">
+            <p class="instruccion">
+              <span class="estado-hora ${vigente ? "punta" : ""}">Ahora: ${vigente ? `Hora Punta (${esc(vigente.nombre)})` : "Hora Normal (Valle)"}</span>
+            </p>
+            <div class="acciones"><button class="btn btn-primario" onclick="abrirFranja(null)">+ Agregar Hora Punta</button></div>
+          </div>
+          <p class="ayuda">
+            La <strong>Hora Normal (Valle)</strong> rige las 24 horas por defecto. Solo registra los picos de <strong>Hora Punta</strong>:
+            al terminar una franja, el cronómetro vuelve solo a velocidad normal. La frecuencia de salida se calcula en el
+            Módulo de Asistencia según las unidades presentes.
+          </p>
+          <div class="franjas">${tarjetas || `<p class="ayuda">Aún no hay franjas de hora punta: todo el día rige la Hora Normal.</p>`}</div>
+          ${aviso ? `<div class="aviso">${aviso}</div>` : ""}
+        </section>
+      `;
+    }
+
+    function cambiarTolerancia(paso) {
+      horarios.tolerancia = Math.min(TOLERANCIA_MAXIMA, Math.max(0, horarios.tolerancia + paso));
+      guardarHorarios();
+    }
+
+    function alternarFranja(id, activo) {
+      horarios.franjas.find(f => f.id === id).activo = activo;
+      guardarHorarios();
+    }
+
+    function pedirEliminarFranja(id) {
+      franjaPorEliminar = id;
+      pintarHorarios();
+    }
+
+    function eliminarFranja(id) {
+      horarios.franjas = horarios.franjas.filter(f => f.id !== id);
+      franjaPorEliminar = null;
+      guardarHorarios();
+    }
+
+    // ---------- Ventanilla modal de creación y edición ----------
+    function abrirFranja(id) {
+      const f = horarios.franjas.find(x => x.id === id);
+      franjaEditando = f ? JSON.parse(JSON.stringify(f)) : {
+        id: null, nombre: "", desde: "06:00", hasta: "09:00",
+        dias: [true, true, true, true, true, false, false],
+        vigenciaDesde: hoyISO(), vigenciaHasta: finDeAnio(), activo: true
+      };
+      pintarVentanillaFranja();
+    }
+
+    function pintarVentanillaFranja(error) {
+      const f = franjaEditando, tope = finDeAnio();
+      const campo = (id, etiqueta, tipo, propiedad, extra = "") => `
+        <div class="campo">
+          <label for="${id}">${etiqueta}</label>
+          <input id="${id}" type="${tipo}" value="${f[propiedad]}" ${extra} oninput="franjaEditando.${propiedad} = this.value">
+        </div>
+      `;
+      document.getElementById("modal").innerHTML = `
+        <div class="modal-fondo"><div class="modal" role="dialog" aria-modal="true">
+          <h3>${f.id ? "Editar franja de Hora Punta" : "Nueva franja de Hora Punta"}</h3>
+          <p>Los horarios se eligen en formato de 12 horas (HH:MM AM/PM).</p>
+          <div class="campos-ventanilla">
+            <div class="campo">
+              <label for="fNombre">Nombre</label>
+              <input id="fNombre" placeholder="Hora punta mañana" value="${esc(f.nombre)}" oninput="franjaEditando.nombre = this.value">
+            </div>
+            <div class="fila-2">
+              ${selectorHora("fDesde", "Desde", f.desde)}
+              ${selectorHora("fHasta", "Hasta", f.hasta)}
+            </div>
+            <div class="campo">
+              <label>Días activos</label>
+              <div class="chips">
+                ${DIAS_CORTOS.map((d, i) => `<button type="button" class="chip ${f.dias[i] ? "on" : ""}" onclick="alternarDiaFranja(${i})">${d}</button>`).join("")}
+              </div>
+            </div>
+            <div class="fila-2">
+              ${campo("fVigDesde", "Vigente desde", "date", "vigenciaDesde", `max="${tope}"`)}
+              ${campo("fVigHasta", "Vigente hasta", "date", "vigenciaHasta", `max="${tope}"`)}
+            </div>
+            <p class="ayuda">La vigencia llega como máximo al 31 de diciembre de ${tope.slice(0, 4)}.</p>
+          </div>
+          <p class="texto-error" ${error ? "" : "hidden"}>${error || ""}</p>
+          <div class="acciones">
+            <button class="btn" onclick="cerrarVentanillaFranja()">✗ Cancelar</button>
+            <button class="btn btn-ok" onclick="guardarFranja()">✓ Aceptar / Guardar</button>
+          </div>
+        </div></div>
+      `;
+    }
+
+    // Las horas se guardan en formato de 24 h ("18:30") pero se muestran y eligen en 12 h: "06:30 PM"
+    const dosCifras = x => String(x).padStart(2, "0");
+
+    function hora12(hhmm) {
+      const [h, m] = hhmm.split(":").map(Number);
+      return `${dosCifras(h % 12 || 12)}:${dosCifras(m)} ${h < 12 ? "AM" : "PM"}`;
+    }
+
+    function selectorHora(id, etiqueta, hhmm) {
+      const [h, m] = hhmm.split(":").map(Number);
+      const h12 = h % 12 || 12, pm = h >= 12;
+      const minutos = [...new Set([0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, m])].sort((a, b) => a - b);
+      const opcion = (valor, texto, elegido) => `<option value="${valor}" ${elegido ? "selected" : ""}>${texto}</option>`;
+      const alCambiar = `onchange="cambiarHoraFranja('${id}')"`;
+      return `
+        <div class="campo">
+          <label for="${id}H">${etiqueta}</label>
+          <div class="selector-hora">
+            <select id="${id}H" aria-label="Hora" ${alCambiar}>
+              ${[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map(x => opcion(x, dosCifras(x), x === h12)).join("")}
+            </select>
+            <span>:</span>
+            <select id="${id}M" aria-label="Minutos" ${alCambiar}>
+              ${minutos.map(x => opcion(x, dosCifras(x), x === m)).join("")}
+            </select>
+            <select id="${id}P" aria-label="AM o PM" ${alCambiar}>
+              ${opcion("AM", "AM", !pm)}${opcion("PM", "PM", pm)}
+            </select>
+          </div>
+        </div>
+      `;
+    }
+
+    // Devuelve la hora elegida en formato de 24 h ("18:30")
+    function leerSelectorHora(id) {
+      const valor = sufijo => document.getElementById(id + sufijo).value;
+      const h = Number(valor("H")) % 12 + (valor("P") === "PM" ? 12 : 0);
+      return `${dosCifras(h)}:${dosCifras(valor("M"))}`;
+    }
+
+    function cambiarHoraFranja(id) {
+      franjaEditando[id === "fDesde" ? "desde" : "hasta"] = leerSelectorHora(id);
+    }
+
+    function alternarDiaFranja(i) {
+      franjaEditando.dias[i] = !franjaEditando.dias[i];
+      pintarVentanillaFranja();
+    }
+
+    function cerrarVentanillaFranja() {
+      document.getElementById("modal").innerHTML = "";
+      franjaEditando = null;
+    }
+
+    function guardarFranja() {
+      const f = franjaEditando;
+      f.nombre = f.nombre.trim();
+      // Dos franjas activas no pueden cruzarse en el mismo día, hora y vigencia
+      const cruce = horarios.franjas.find(o => o.id !== f.id && o.activo && f.activo
+        && o.dias.some((d, i) => d && f.dias[i])
+        && o.vigenciaDesde <= f.vigenciaHasta && f.vigenciaDesde <= o.vigenciaHasta
+        && o.desde < f.hasta && f.desde < o.hasta);
+      const error = !f.nombre ? "Escribe un nombre para la franja."
+        : !f.desde || !f.hasta || f.desde >= f.hasta ? "La hora «Hasta» debe ser después de «Desde»."
+        : !f.dias.some(Boolean) ? "Elige al menos un día activo."
+        : !f.vigenciaDesde || !f.vigenciaHasta || f.vigenciaDesde > f.vigenciaHasta ? "Revisa las fechas de vigencia."
+        : f.vigenciaHasta > finDeAnio() ? `La vigencia no puede pasar del 31 de diciembre de ${finDeAnio().slice(0, 4)}.`
+        : cruce ? `Se cruza con «${esc(cruce.nombre)}» en los mismos días y horas.` : "";
+      if (error) return pintarVentanillaFranja(error);
+
+      if (f.id) horarios.franjas = horarios.franjas.map(o => o.id === f.id ? f : o);
+      else horarios.franjas.push({ ...f, id: "f" + Date.now() });
+      horarios.franjas.sort((a, b) => a.desde.localeCompare(b.desde));
+      cerrarVentanillaFranja();
+      guardarHorarios();
+    }
+
+    // ============================================================
+    // SUBMÓDULO 6: PERSONAL DE LA EMPRESA (CONDUCTORES Y FLOTA)
+    // Cada conductor escanea el QR de la empresa y llena él mismo su ficha; aquí solo se aprueba.
+    // En el APK las solicitudes llegan desde el celular del chofer; aquí se simulan ("Modo prueba").
+    // ============================================================
+    const CLAVE_FLOTA = "config_flota";
+    const CLAVE_ID_EMPRESA = "config_empresa_id";
+    const QR_LIBRERIA = "https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js";
+
+    const CAMPOS_CONDUCTOR = [
+      { nombre: "nombreCompleto", etiqueta: "Nombre y Apellidos", placeholder: "Luis Mamani Condori", regla: nombreValido },
+      { nombre: "dni", etiqueta: "DNI", placeholder: "12345678", largo: 8, numerico: true, regla: dniValido },
+      {
+        nombre: "padron", etiqueta: "Número de Padrón", placeholder: "15", largo: 4, numerico: true,
+        regla: x => !x ? "El número de padrón es obligatorio." : Number(x) < 1 ? "El número de padrón debe ser mayor que 0." : ""
+      },
+      {
+        nombre: "placa", etiqueta: "Placa de rodaje", placeholder: "V1A-123", largo: 7, mayusculas: true,
+        regla: x => !x ? "La placa es obligatoria." : !/^[A-Z0-9]{3}-?\d{3}$/.test(x) ? "Escribe la placa con el formato ABC-123." : ""
+      },
+      { nombre: "celular", etiqueta: "Celular", placeholder: "987654321", prefijo: "+51", largo: 9, numerico: true, regla: celularValido }
+    ];
+
+    let flota = { solicitudes: [], padron: [] };
+    try { flota = JSON.parse(localStorage.getItem(CLAVE_FLOTA)) || flota; } catch (e) {}
+
+    let erroresSolicitud = {}; // id de solicitud → motivo por el que no se pudo aceptar
+    let porRechazar = null;    // id de la solicitud que espera confirmación para rechazarse
+
+    function guardarFlota() {
+      try { localStorage.setItem(CLAVE_FLOTA, JSON.stringify(flota)); } catch (e) {}
+    }
+
+    // Identificador en texto único de la empresa (en el APK lo asigna el servidor)
+    function idEmpresa() {
+      let id = null;
+      try { id = localStorage.getItem(CLAVE_ID_EMPRESA); } catch (e) {}
+      if (!id) {
+        id = "EMP-" + Math.random().toString(36).slice(2, 10).toUpperCase();
+        try { localStorage.setItem(CLAVE_ID_EMPRESA, id); } catch (e) {}
+      }
+      return id;
+    }
+
+    function vistaFlota() {
+      return `
+        <section class="panel">
+          <div class="barra-ruta">
+            <p class="instruccion" id="cupoFlota"></p>
+            <div class="acciones"><button class="btn btn-primario" onclick="verQR()">Ver QR de la Empresa</button></div>
+          </div>
+          <p class="ayuda">Para no digitar la flota en la tablet, cada conductor escanea este QR desde el aplicativo en modo conductor y llena él mismo su ficha. Su solicitud llega a la bandeja de abajo.</p>
+        </section>
+
+        <section class="panel">
+          <h3>Bandeja de Solicitudes de Ingreso</h3>
+          <div class="lista-flota" id="bandejaFlota"></div>
+          <details class="simulador">
+            <summary>🔧 Modo prueba: simular la solicitud de un conductor (lo que él llena en su celular)</summary>
+            <form id="formConductor" novalidate onsubmit="event.preventDefault(); enviarSolicitud()">
+              <div class="campos">${CAMPOS_CONDUCTOR.map(c => campoHTML("conductor", c, "", true)).join("")}</div>
+              <div class="acciones"><button type="submit" class="btn btn-primario">Enviar solicitud</button></div>
+            </form>
+          </details>
+        </section>
+
+        <section class="panel">
+          <h3>Padrón Oficial de la Flota</h3>
+          <p class="ayuda">Toca un conductor para ver su ficha. El interruptor pausa la unidad (taller, sanción) sin borrar su registro.</p>
+          <div class="lista-flota" id="padronFlota"></div>
+        </section>
+      `;
+    }
+
+    function activarFlota() {
+      prepararCampos(document.getElementById("formConductor"), CAMPOS_CONDUCTOR);
+      pintarFlota();
+    }
+
+    function pintarFlota() {
+      if (!document.getElementById("padronFlota")) return;
+      document.getElementById("cupoFlota").innerHTML =
+        `Padrón: <strong>${flota.padron.length} / ${leerLicencia().cupo}</strong> vehículos (cupo de la licencia contratada).`;
+
+      document.getElementById("bandejaFlota").innerHTML = flota.solicitudes.map(c => `
+        <div class="fila-flota">
+          <div class="flota-info">
+            <strong>${esc(c.nombreCompleto)}</strong>
+            <span>DNI ${c.dni} · Padrón N° ${c.padron} · Placa ${esc(c.placa)} · +51 ${c.celular}</span>
+          </div>
+          ${porRechazar === c.id
+            ? `<span class="confirmar">¿Rechazar?
+                 <button class="btn btn-no" onclick="rechazarSolicitud('${c.id}')">Sí</button>
+                 <button class="btn" onclick="pedirRechazo(null)">No</button>
+               </span>`
+            : `<button class="btn btn-no" onclick="pedirRechazo('${c.id}')">✗ Rechazar</button>
+               <button class="btn btn-ok" onclick="aceptarSolicitud('${c.id}')">✓ Aceptar</button>`}
+          ${erroresSolicitud[c.id] ? `<p class="texto-error">${erroresSolicitud[c.id]}</p>` : ""}
+        </div>
+      `).join("") || `<p class="ayuda">No hay solicitudes pendientes.</p>`;
+
+      document.getElementById("padronFlota").innerHTML = flota.padron.map(c => `
+        <div class="fila-flota ${c.habilitado ? "" : "deshabilitado"}">
+          <button class="flota-info" onclick="verConductor('${c.id}')">
+            <strong>${esc(c.nombreCompleto)}</strong>
+            <span>Padrón N° ${c.padron} · Placa ${esc(c.placa)}</span>
+          </button>
+          <label class="switch ${c.habilitado ? "habilitado" : ""}">
+            <input type="checkbox" ${c.habilitado ? "checked" : ""} onchange="alternarConductor('${c.id}', this.checked)">
+            ${c.habilitado ? "Habilitado" : "Deshabilitado"}
+          </label>
+        </div>
+      `).join("") || `<p class="ayuda">Aún no hay conductores aceptados.</p>`;
+    }
+
+    function verQR() {
+      const id = idEmpresa();
+      mostrarModal(`
+        <button class="cerrar-x" data-accion="cerrar" aria-label="Cerrar" title="Cerrar">✗</button>
+        <h3 class="con-cerrar">QR de la Empresa</h3>
+        <p>Pide a cada conductor que lo escanee desde el aplicativo en modo conductor.</p>
+        <div class="qr-caja" id="qrEmpresa"></div>
+        <p class="codigo-empresa">${id}</p>
+      `, () => {});
+      const caja = () => document.getElementById("qrEmpresa");
+      cargarScript(QR_LIBRERIA)
+        .then(() => { if (caja()) new QRCode(caja(), { text: id, width: 220, height: 220 }); })
+        .catch(() => { if (caja()) caja().innerHTML = `<p class="texto-error">Sin internet no se puede dibujar el QR. El código de la empresa es el de abajo.</p>`; });
+    }
+
+    // Lo que el conductor envía desde su celular al escanear el QR
+    function enviarSolicitud() {
+      const form = document.getElementById("formConductor"), datos = leerCampos(form, CAMPOS_CONDUCTOR);
+      if (!datos) return false;
+      datos.placa = datos.placa.replace(/^([A-Z0-9]{3})-?(\d{3})$/, "$1-$2");
+      datos.padron = String(Number(datos.padron));
+      flota.solicitudes.push({ id: "s" + Date.now(), ...datos });
+      guardarFlota();
+      form.reset();
+      pintarFlota();
+      return true;
+    }
+
+    function pendienteFlota() {
+      const form = document.getElementById("formConductor");
+      if (!form || !CAMPOS_CONDUCTOR.some(c => form.elements[c.nombre].value.trim())) return null;
+      return { guardar: enviarSolicitud, descartar: () => form.reset() };
+    }
+
+    // Aceptar: valida el cupo de la licencia y que el conductor o la unidad no estén ya en el padrón
+    function aceptarSolicitud(id) {
+      const c = flota.solicitudes.find(s => s.id === id), cupo = leerLicencia().cupo;
+      const repetido = flota.padron.find(p => p.dni === c.dni || p.placa === c.placa || p.padron === c.padron);
+      const motivo = flota.padron.length >= cupo
+        ? `No se puede aceptar: ya se llegó al cupo de ${cupo} vehículos de la licencia contratada.`
+        : repetido ? `No se puede aceptar: el DNI, la placa o el número de padrón ya figura en el padrón (${esc(repetido.nombreCompleto)}).` : "";
+      if (motivo) {
+        erroresSolicitud[id] = motivo;
+        return pintarFlota();
+      }
+      delete erroresSolicitud[id];
+      flota.solicitudes = flota.solicitudes.filter(s => s !== c);
+      flota.padron.push({ ...c, habilitado: true });
+      flota.padron.sort((a, b) => Number(a.padron) - Number(b.padron));
+      guardarFlota();
+      pintarFlota();
+    }
+
+    function pedirRechazo(id) {
+      porRechazar = id;
+      pintarFlota();
+    }
+
+    function rechazarSolicitud(id) {
+      flota.solicitudes = flota.solicitudes.filter(s => s.id !== id);
+      delete erroresSolicitud[id];
+      porRechazar = null;
+      guardarFlota();
+      pintarFlota();
+    }
+
+    function alternarConductor(id, habilitado) {
+      flota.padron.find(c => c.id === id).habilitado = habilitado;
+      guardarFlota();
+      pintarFlota();
+    }
+
+    // Tarjeta de solo lectura: la [ ✗ ] solo cierra la vista, no elimina al conductor
+    function verConductor(id) {
+      const c = flota.padron.find(x => x.id === id);
+      mostrarModal(`
+        <button class="cerrar-x" data-accion="cerrar" aria-label="Cerrar" title="Cerrar">✗</button>
+        <h3 class="con-cerrar">${esc(c.nombreCompleto)}</h3>
+        <dl class="datos-conductor">
+          <dt>Nombre y Apellidos</dt><dd>${esc(c.nombreCompleto)}</dd>
+          <dt>DNI</dt><dd>${c.dni}</dd>
+          <dt>Número de Padrón</dt><dd>${c.padron}</dd>
+          <dt>Placa de rodaje</dt><dd>${esc(c.placa)}</dd>
+          <dt>Celular</dt><dd>+51 ${c.celular}</dd>
+          <dt>Estado</dt><dd>${c.habilitado ? "Habilitado" : "Deshabilitado"}</dd>
+        </dl>
+      `, () => {});
+    }
+
+    // ============================================================
+    // NAVEGACIÓN ENTRE SUBMÓDULOS
+    // ============================================================
+    let actual = null; // submódulo abierto
+
+    // Abre el submódulo indicado (si no existe, abre el primero).
+    // Si el submódulo actual tiene cambios sin guardar, pregunta antes de salir.
+    function abrir(id) {
+      const s = submodulos.find(x => x.id === id) || submodulos[0];
+      const pendiente = actual && actual !== s && actual.pendiente && actual.pendiente();
+      if (pendiente) {
+        location.hash = actual.id; // si fue el botón "atrás", se deshace
+        menu.classList.remove("abierto");
+        preguntarSalida(pendiente, () => mostrar(s));
+        return;
+      }
+      mostrar(s);
+    }
+
+    function mostrar(s) {
+      actual = s;
+      document.getElementById("modal").innerHTML = ""; // ninguna ventanilla queda abierta al cambiar de submódulo
+      contenido.innerHTML = vistaSubmodulo(s);
+      if (s.activar) s.activar();
+      pintarMenu(s.id);
+      pintarLicencia();
+      menu.classList.remove("abierto");
+      if (location.hash.slice(1) !== s.id) location.hash = s.id;
+    }
+
+    // Botón "atrás" del navegador o del celular
+    window.addEventListener("hashchange", () => {
+      if (!actual || location.hash.slice(1) !== actual.id) abrir(location.hash.slice(1));
+    });
+
+    // Pestaña hacia el otro módulo (otro archivo): con cambios sin guardar, pregunta antes de salir
+    let saliendo = false;
+    function salirA(url) {
+      const pendiente = actual && actual.pendiente && actual.pendiente();
+      if (!pendiente) return true;
+      menu.classList.remove("abierto");
+      preguntarSalida(pendiente, () => { saliendo = true; location.href = url; });
+      return false;
+    }
+
+    // Cerrar o recargar la página con cambios sin guardar
+    window.addEventListener("beforeunload", e => {
+      if (!saliendo && actual && actual.pendiente && actual.pendiente()) { e.preventDefault(); e.returnValue = ""; }
+    });
+
+    // Solicitudes y cambios de datos que envían los conductores desde su aplicativo (otra pestaña)
+    window.addEventListener("storage", e => {
+      if (e.key !== CLAVE_FLOTA) return;
+      try { flota = JSON.parse(e.newValue) || flota; } catch (err) {}
+      pintarFlota();
+    });
+
+    document.getElementById("btnMenu").onclick = () => menu.classList.toggle("abierto");
+
+    // Al cargar, abre el submódulo indicado en la URL (#ruta, #desvios, etc.)
+    abrir(location.hash.slice(1));
+  </script>
+</body>
+</html>
